@@ -9,6 +9,7 @@ dependencies = [
  "berry-blocks-configure",
  "berry-blocks-host",
  "berry-blocks-progblocks",
+ "berry-blocks-site",
  "berry-blocks-wizard",
 ]
 
@@ -19,6 +20,17 @@ dependencies = [
  "berry-blocks-host",
  "berry-blocks-registry",
  "sha2",
+]
+
+[[package]]
+name = "berry-blocks-harness"
+version = "0.1.0"
+dependencies = [
+ "berry-blocks-configure",
+ "berry-blocks-host",
+ "berry-blocks-provision",
+ "berry-blocks-site",
+ "berrywiki-render",
 ]
 
 [[package]]
@@ -60,10 +72,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "berry-blocks-site"
+version = "0.1.0"
+dependencies = [
+ "berry-blocks-host",
+]
+
+[[package]]
 name = "berry-blocks-wizard"
 version = "0.1.0"
 dependencies = [
  "berry-blocks-configure",
+ "berry-blocks-harness",
  "berry-blocks-mint",
  "berry-blocks-provision",
  "berry-blocks-registry",

@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: MPL-2.0
 [package]
-name = "berry-blocks"
-description = "Command line for the berry-blocks lab."
+name = "berry-blocks-harness"
+description = "Run every check against a configured wiki (conformance, escaping, no script, pins, browser) and write a report."
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
@@ -10,10 +10,10 @@ repository.workspace = true
 
 [dependencies]
 berry-blocks-host = { path = "../berry-blocks-host" }
-berry-blocks-progblocks = { path = "../berry-blocks-progblocks" }
-berry-blocks-wizard = { path = "../berry-blocks-wizard" }
 berry-blocks-configure = { path = "../berry-blocks-configure" }
+berry-blocks-provision = { path = "../berry-blocks-provision" }
 berry-blocks-site = { path = "../berry-blocks-site" }
+berrywiki-render.workspace = true
 
 [lints]
 workspace = true
