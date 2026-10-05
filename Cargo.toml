@@ -4,6 +4,7 @@ resolver = "2"
 members = [
     "crates/berry-blocks-host",
     "crates/berry-blocks-progblocks",
+    "crates/berry-blocks-registry",
     "crates/berry-blocks-mint",
     "crates/berry-blocks-provision",
     "crates/berry-blocks-wizard",

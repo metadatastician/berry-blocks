@@ -18,6 +18,17 @@ fn app() -> App {
     ));
     fs::create_dir_all(&root).unwrap();
     fs::write(root.join("Cargo.toml"), "[workspace]\nmembers = [\n    \"crates/berry-blocks-host\",\n    \"crates/berry-blocks-cli\",\n]\n").unwrap();
+    fs::create_dir_all(root.join("crates/berry-blocks-registry/src")).unwrap();
+    fs::write(
+        root.join("crates/berry-blocks-registry/Cargo.toml"),
+        "[dependencies]\n# berry-blocks:mint-dependencies\n",
+    )
+    .unwrap();
+    fs::write(
+        root.join("crates/berry-blocks-registry/src/lib.rs"),
+        "    vec![\n        // berry-blocks:mint-entries\n    ]\n",
+    )
+    .unwrap();
     App {
         root,
         addr: "127.0.0.1:23880".into(),

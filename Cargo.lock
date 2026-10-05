@@ -42,6 +42,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "berry-blocks-registry"
+version = "0.1.0"
+dependencies = [
+ "berry-blocks-host",
+ "berry-blocks-progblocks",
+]
+
+[[package]]
 name = "berry-blocks-wizard"
 version = "0.1.0"
 dependencies = [

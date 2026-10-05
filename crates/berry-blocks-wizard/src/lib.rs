@@ -626,7 +626,7 @@ fn mint_done(app: &App, q: &BTreeMap<String, String>) -> Response {
     let name = q.get("name").cloned().unwrap_or_default();
     let found = installed(app).into_iter().find(|p| p.name == name);
     let body = match found {
-        Some(p) => format!("<div class=\"notice\" role=\"status\"><h2>{n} is minted</h2><p>Created 4 files and changed 1. Its ID is <span class=\"mono\">{id}</span>.</p></div>\n<p>The plugin exists and builds, and it renders its blocks as plain code until you change it. Next is Provision, which is not built yet.</p>\n<div class=\"actions\"><a class=\"btn\" href=\"/\">Back to plugins</a></div>", n = esc(&p.name), id = esc(&p.id)),
+        Some(p) => format!("<div class=\"notice\" role=\"status\"><h2>{n} is minted</h2><p>Created 4 files and changed 3. Its ID is <span class=\"mono\">{id}</span>.</p></div>\n<p>The plugin exists and builds, and it renders its blocks as plain code until you change it. Next is Provision, which is not built yet.</p>\n<div class=\"actions\"><a class=\"btn\" href=\"/\">Back to plugins</a></div>", n = esc(&p.name), id = esc(&p.id)),
         None => "<div class=\"error-banner\" role=\"alert\"><h2>No plugin by that name</h2><p>Nothing was minted under that name.</p></div>".to_string(),
     };
     Response::html(frame(
