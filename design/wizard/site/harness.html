@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Harness ProgBlocks · berry-blocks</title>
+<link rel="stylesheet" href="wizard.css">
+</head>
+<body>
+<a class="skip-link" href="#main">Skip to content</a>
+<header>
+<div class="topbar">
+<a class="brand" href="index.html">berry-blocks</a>
+<span class="section">Plugins</span>
+<a class="spacer" href="harness.html">Checks</a>
+</div>
+<p class="status-strip"><strong>Lab mode</strong> · writes only to this berry-blocks checkout · BerryWiki and ProgBlocks are never modified · nothing happens until you press an action button</p>
+</header>
+<div class="grid">
+<nav class="rail" aria-label="Plugin steps">
+<h2 id="steps-h">Steps</h2>
+<ol class="steps" aria-labelledby="steps-h">
+<li class="done"><a href="mint.html"><span class="n" aria-hidden="true">1</span><span><span class="verb">Mint</span><span class="what">Create the plugin and its manifest</span><span class="visually-hidden">, done</span></span></a></li>
+<li class="done"><a href="provision.html"><span class="n" aria-hidden="true">2</span><span><span class="verb">Provision</span><span class="what">Fetch it at an exact commit</span><span class="visually-hidden">, done</span></span></a></li>
+<li class="done"><a href="configure.html"><span class="n" aria-hidden="true">3</span><span><span class="verb">Configure</span><span class="what">Turn it on for a wiki</span><span class="visually-hidden">, done</span></span></a></li>
+<li><a href="harness.html" aria-current="step"><span class="n" aria-hidden="true">4</span><span><span class="verb">Harness</span><span class="what">Check it does no harm</span><span class="visually-hidden">, current step</span></span></a></li>
+</ol>
+<h2>Plugins</h2>
+<ul class="plugins">
+<li class="current"><a href="index.html">ProgBlocks</a></li>
+<li><a href="mint.html">+ Mint a new plugin</a></li>
+</ul>
+</nav>
+<main class="main" id="main">
+<p class="kicker">Step 4 of 4 · Harness</p>
+<h1>Harness ProgBlocks</h1>
+<p class="lede">Harnessing runs the plugin against a configured wiki and checks it does no harm. Running checks changes nothing; it writes a report.</p>
+<form method="get" action="harness-results.html">
+<div class="field"><label for="wiki">Wiki</label><select id="wiki" name="wiki"><option selected>lab-wiki (enhanced)</option></select></div>
+<fieldset class="field"><legend>Checks to run</legend>
+<div class="choice"><input type="checkbox" id="c-conformance" name="conformance" checked><label for="c-conformance">BerryWiki pages stay identical</label><p class="field-hint">Every page without a claimed block renders byte-for-byte as BerryWiki renders it.</p></div>
+<div class="choice"><input type="checkbox" id="c-escaping" name="escaping" checked><label for="c-escaping">Untrusted text stays text</label><p class="field-hint">Variant names, labels and code are escaped; nothing in a page becomes markup.</p></div>
+<div class="choice"><input type="checkbox" id="c-static" name="static" checked><label for="c-static">Static pages have no script</label><p class="field-hint">Not one <code>&lt;script</code> in any static page.</p></div>
+<div class="choice"><input type="checkbox" id="c-axe-light" name="axe-light" checked><label for="c-axe-light">Accessible in light mode</label><p class="field-hint">axe-core, WCAG 2.0–2.2 A and AA plus best practice, in a real browser.</p></div>
+<div class="choice"><input type="checkbox" id="c-axe-dark" name="axe-dark" checked><label for="c-axe-dark">Accessible in dark mode</label><p class="field-hint">The same audit with the dark colour scheme.</p></div>
+<div class="choice"><input type="checkbox" id="c-nojs" name="nojs" checked><label for="c-nojs">Readable without script</label><p class="field-hint">With JavaScript off, every variant and its code is visible.</p></div>
+<div class="choice"><input type="checkbox" id="c-upgrade" name="upgrade" checked><label for="c-upgrade">Upgrades with script</label><p class="field-hint">With JavaScript on, each group becomes tabs.</p></div>
+<div class="choice"><input type="checkbox" id="c-persist" name="persist" checked><label for="c-persist">Remembers the reader's choice</label><p class="field-hint">A choice on one page is shown on the next.</p></div>
+<div class="choice"><input type="checkbox" id="c-pins" name="pins" checked><label for="c-pins">Pins agree</label><p class="field-hint">The commit in pins.kyaml matches what was built.</p></div>
+</fieldset>
+<div class="actions"><button class="btn" type="submit">Run checks</button><a class="cancel" href="index.html">Cancel</a></div>
+</form>
+</main>
+<aside class="context" aria-label="About this plugin">
+<h2>This plugin</h2>
+<div class="card"><dl>
+<dt>Name</dt><dd>ProgBlocks</dd>
+<dt>ID</dt><dd class="mono">c39f8b97-e19b-88cf-bc7f-15c773f72113</dd>
+<dt>ID kind</dt><dd>UUID v8, profile C</dd>
+<dt>Crate</dt><dd class="mono">berry-blocks-progblocks</dd>
+<dt>Upstream</dt><dd><a href="https://github.com/metadatastician/progblocks">metadatastician/<wbr>progblocks</a></dd>
+<dt>Pinned at</dt><dd class="mono">ccb4122</dd>
+<dt>Profiles</dt><dd>static, enhanced</dd>
+</dl></div>
+<h2>Independence</h2>
+<ul class="checklist">
+<li class="yes">BerryWiki is not modified</li>
+<li class="yes">ProgBlocks is not modified</li>
+<li class="yes">Neither depends on this plugin</li>
+<li class="yes">Static profile has no script</li>
+</ul>
+<h2>Last checks</h2>
+<p class="evidence">Not run yet.</p>
+</aside>
+</div>
+</body>
+</html>

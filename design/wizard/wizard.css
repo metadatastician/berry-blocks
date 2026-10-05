@@ -1,0 +1,188 @@
+/* SPDX-License-Identifier: MPL-2.0 */
+/* berry-blocks plugin wizard — look and feel prototype.
+   Tokens and patterns come from BerryWiki's own stylesheet
+   (crates/berrywiki-serve/src/lib.rs, CSS) so the wizard reads as part of the
+   same product: berry topbar, status strip, three columns, notice/error/draft
+   banners, preview-then-act. No script anywhere. */
+
+:root {
+  --berry: #7a1f2b;
+  --berry-tint: #f0e0e2;
+  --berry-tint-strong: #e2c8cc;
+  --ink: #1a1a1a;
+  --muted: #555;
+  --faint: #6b6b6b;
+  --line: #e5e5e5;
+  --field: #ccc;
+  --paper: #fff;
+  --code-bg: #f6f6f6;
+  --strip-bg: #f6f1f2;
+  --ok: #2e7d32;
+  --ok-bg: #e7f4e7;
+  --warn: #7a5b00;
+  --warn-line: #c9a227;
+  --warn-bg: #fdf6e3;
+  --bad: #c0392b;
+  --bad-bg: #fbeaea;
+  --focus: #0b5fff;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --ink: #e6e6e6;
+    --muted: #b8b8b8;
+    --faint: #9a9a9a;
+    --line: #333;
+    --field: #555;
+    --paper: #161616;
+    --code-bg: #222;
+    --strip-bg: #1d1d1d;
+    --berry-tint: #3a1d22;
+    --berry-tint-strong: #4c252c;
+    --ok: #7fcf86;
+    --ok-bg: #12290f;
+    --warn: #e7c65a;
+    --warn-bg: #2b230c;
+    --bad: #f08a7e;
+    --bad-bg: #2e1212;
+    --focus: #7aa7ff;
+  }
+}
+
+* { box-sizing: border-box; }
+body { margin: 0; font: 15px/1.5 system-ui, sans-serif; color: var(--ink); background: var(--paper); }
+a { color: inherit; }
+.main a, .context a { color: var(--berry); }
+@media (prefers-color-scheme: dark) { .main a, .context a { color: #f0a3ad; } }
+:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+
+.skip-link { position: absolute; left: -9999px; top: 0; z-index: 100; padding: .5rem .9rem; background: var(--paper); color: var(--ink); border: 2px solid var(--ink); }
+.skip-link:focus { left: .5rem; top: .5rem; }
+.visually-hidden { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+
+/* Topbar and status strip: identical to BerryWiki's. */
+.topbar { display: flex; gap: 1rem; align-items: center; padding: .6rem 1rem; background: var(--berry); color: #fff; }
+.brand { font-weight: 700; color: #fff; text-decoration: none; font-size: 1.1rem; }
+.topbar a { color: #fff; text-decoration: none; }
+.topbar .section { opacity: .9; }
+.topbar .spacer { margin-left: auto; }
+.status-strip { margin: 0; padding: .35rem 1rem; font-size: .85rem; background: var(--strip-bg); border-bottom: 1px solid var(--line); color: var(--muted); }
+.status-strip strong { color: var(--ok); }
+
+/* Three columns: steps | work | context. */
+.grid { display: grid; grid-template-columns: 16rem minmax(0, 1fr) 17rem; min-height: calc(100vh - 5rem); }
+.rail { border-right: 1px solid var(--line); padding: .8rem 0; }
+.main { padding: 1rem 2rem 3rem; min-width: 0; max-width: 52rem; }
+.context { border-left: 1px solid var(--line); padding: .5rem 1rem; font-size: .9rem; }
+.context h2, .rail h2 { font-size: .78rem; text-transform: uppercase; letter-spacing: .04em; color: var(--faint); margin: 1rem 0 .4rem; padding: 0 1rem; }
+.context h2 { padding: 0; }
+
+/* The step rail: same four verbs, same order, everywhere. */
+.steps { list-style: none; margin: 0; padding: 0; counter-reset: step; }
+.steps li { counter-increment: step; }
+.steps a { display: grid; grid-template-columns: 1.7rem 1fr; gap: .5rem; align-items: start; padding: .45rem 1rem; text-decoration: none; color: var(--ink); }
+.steps a:hover { background: var(--code-bg); }
+.steps .n { display: inline-grid; place-items: center; width: 1.6rem; height: 1.6rem; border-radius: 50%; border: 2px solid var(--field); font-size: .8rem; font-weight: 700; color: var(--muted); }
+.steps .verb { font-weight: 600; display: block; }
+.steps .what { display: block; font-size: .8rem; color: var(--muted); }
+.steps .done .n { border-color: var(--ok); background: var(--ok); color: var(--paper); }
+.steps [aria-current="step"] { background: var(--berry-tint); }
+.steps [aria-current="step"] .n { border-color: var(--berry); background: var(--berry); color: #fff; }
+.steps [aria-current="step"] .verb { color: var(--berry); }
+@media (prefers-color-scheme: dark) { .steps [aria-current="step"] .verb { color: #f0a3ad; } }
+.plugins { list-style: none; margin: 0; padding: 0; }
+.plugins a { display: block; padding: .25rem 1rem; text-decoration: none; }
+.plugins .current a { font-weight: 600; background: var(--berry-tint); }
+
+/* Step heading: "Step 2 of 4" above a plain verb-first title. */
+.kicker { margin: .2rem 0 0; font-size: .85rem; color: var(--faint); }
+.main h1 { margin: .1rem 0 .4rem; font-size: 1.7rem; }
+.lede { margin: 0 0 1.2rem; max-width: 42rem; }
+
+/* Forms: BerryWiki's editor-field pattern. */
+.field { margin: 0 0 1rem; }
+.field label, .field legend { display: block; font-weight: 600; margin-bottom: .2rem; }
+.field input[type=text], .field select { font: inherit; padding: .35rem .5rem; border: 1px solid var(--field); border-radius: 3px; min-width: 22rem; max-width: 100%; background: var(--paper); color: var(--ink); }
+.field input.mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: .9rem; }
+.field input[aria-invalid="true"] { border: 2px solid var(--bad); }
+.field-error { margin: .25rem 0 0; font-size: .85rem; font-weight: 600; color: var(--bad); }
+.field-hint { margin: .25rem 0 0; font-size: .82rem; color: var(--muted); }
+fieldset.field { border: 0; padding: 0; }
+.choice { display: grid; grid-template-columns: 1.4rem 1fr; gap: .2rem .4rem; align-items: start; margin: .35rem 0; }
+.choice input { margin-top: .3rem; }
+.choice .field-hint { grid-column: 2; margin: 0; }
+.fixed { display: inline-block; padding: .05rem .45rem; border-radius: 3px; background: var(--code-bg); font-size: .82rem; color: var(--muted); }
+
+/* Buttons: Preview (secondary) always precedes the action (primary). */
+.actions { display: flex; flex-wrap: wrap; gap: .6rem; align-items: center; margin: 1.4rem 0 .4rem; }
+.main .btn, .btn { font: inherit; padding: .4rem 1rem; border: 1px solid var(--berry); border-radius: 3px; background: var(--berry); color: #fff; cursor: pointer; text-decoration: none; }
+.main .btn.secondary, .btn.secondary { background: var(--paper); color: var(--berry); }
+@media (prefers-color-scheme: dark) { .main .btn.secondary, .btn.secondary { color: #f0a3ad; border-color: #f0a3ad; } }
+.cancel { margin-left: .4rem; }
+
+/* Banners: BerryWiki's notice / error / draft. */
+.notice, .error-banner, .draft-banner { padding: .55rem .8rem; margin: .8rem 0 1rem; border-left: 4px solid; }
+.notice { background: var(--ok-bg); border-color: var(--ok); }
+.error-banner { background: var(--bad-bg); border-color: var(--bad); }
+.draft-banner { background: var(--warn-bg); border-color: var(--warn-line); }
+.notice h2, .error-banner h2, .draft-banner h2 { margin: 0 0 .3rem; font-size: 1rem; }
+.notice p, .error-banner p, .draft-banner p { margin: .2rem 0; }
+.error-banner ul { margin: .3rem 0 0; padding-left: 1.2rem; }
+
+/* The preview block: what would change, shown in full, before anything does. */
+.preview { border-top: 1px dashed var(--field); margin-top: 1.4rem; padding-top: .8rem; }
+.preview > h2 { margin: 0 0 .2rem; font-size: 1.15rem; }
+.changes { list-style: none; padding: 0; margin: .6rem 0 1rem; }
+.changes li { display: grid; grid-template-columns: 5.5rem 1fr; gap: .6rem; padding: .25rem 0; border-bottom: 1px solid var(--line); }
+.change-kind { font-size: .75rem; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; align-self: center; }
+.change-kind.create { color: var(--ok); }
+.change-kind.modify { color: var(--warn); }
+.change-kind.none { color: var(--faint); }
+.path { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: .88rem; overflow-wrap: anywhere; }
+details.file { margin: .5rem 0; border: 1px solid var(--line); border-radius: 4px; }
+details.file summary { padding: .35rem .7rem; cursor: pointer; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: .88rem; }
+details.file pre { margin: 0; border-top: 1px solid var(--line); border-radius: 0 0 4px 4px; }
+pre { background: var(--code-bg); padding: .7rem; overflow: auto; font: 13px/1.5 ui-monospace, SFMono-Regular, Menlo, monospace; border-radius: 4px; }
+ins { background: var(--ok-bg); text-decoration: none; }
+del { background: var(--bad-bg); }
+
+/* Checks: one row per check, outcome in words and shape, never colour alone. */
+.checks { width: 100%; border-collapse: collapse; margin: .6rem 0 1rem; }
+.checks th, .checks td { text-align: left; padding: .45rem .5rem; border-bottom: 1px solid var(--line); vertical-align: top; }
+.checks thead th { font-size: .8rem; text-transform: uppercase; letter-spacing: .04em; color: var(--faint); }
+.checks tbody th { font-weight: 600; }
+.outcome { font-weight: 700; white-space: nowrap; }
+.outcome.pass { color: var(--ok); }
+.outcome.fail { color: var(--bad); }
+.outcome.skip { color: var(--faint); }
+.evidence { font-size: .85rem; color: var(--muted); }
+
+/* Context panel cards. */
+.card { border: 1px solid var(--line); border-radius: 4px; padding: .6rem .7rem; margin: .4rem 0 .8rem; }
+.card dl { margin: 0; display: grid; grid-template-columns: auto 1fr; gap: .15rem .6rem; font-size: .85rem; }
+.card dt { color: var(--faint); }
+.card dd { margin: 0; overflow-wrap: anywhere; }
+.mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: .85em; }
+.checklist { list-style: none; padding: 0; margin: 0; font-size: .85rem; }
+.checklist li { padding: .15rem 0 .15rem 1.3rem; position: relative; }
+.checklist li::before { position: absolute; left: 0; font-weight: 700; }
+.checklist .yes::before { content: "✓"; color: var(--ok); }
+.checklist .no::before { content: "✗"; color: var(--bad); }
+
+/* Overview table. */
+.plugins-table { width: 100%; border-collapse: collapse; margin: .8rem 0 1.2rem; }
+.plugins-table th, .plugins-table td { text-align: left; padding: .5rem; border-bottom: 1px solid var(--line); }
+.plugins-table thead th { font-size: .8rem; text-transform: uppercase; letter-spacing: .04em; color: var(--faint); }
+.state { font-size: .82rem; white-space: nowrap; }
+.state.yes { color: var(--ok); font-weight: 600; }
+.state.no { color: var(--faint); }
+
+@media (max-width: 60rem) {
+  .grid { grid-template-columns: 1fr; }
+  .rail { border-right: 0; border-bottom: 1px solid var(--line); }
+  .context { border-left: 0; border-top: 1px solid var(--line); }
+  .field input[type=text], .field select { min-width: 0; width: 100%; }
+}
+
+/* An action that is not available yet must not look available. */
+.btn[disabled] { background: var(--code-bg); border-color: var(--field); color: var(--faint); cursor: not-allowed; }

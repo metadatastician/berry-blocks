@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Provision ProgBlocks · berry-blocks</title>
+<link rel="stylesheet" href="wizard.css">
+</head>
+<body>
+<a class="skip-link" href="#main">Skip to content</a>
+<header>
+<div class="topbar">
+<a class="brand" href="index.html">berry-blocks</a>
+<span class="section">Plugins</span>
+<a class="spacer" href="harness.html">Checks</a>
+</div>
+<p class="status-strip"><strong>Lab mode</strong> · writes only to this berry-blocks checkout · BerryWiki and ProgBlocks are never modified · nothing happens until you press an action button</p>
+</header>
+<div class="grid">
+<nav class="rail" aria-label="Plugin steps">
+<h2 id="steps-h">Steps</h2>
+<ol class="steps" aria-labelledby="steps-h">
+<li class="done"><a href="mint.html"><span class="n" aria-hidden="true">1</span><span><span class="verb">Mint</span><span class="what">Create the plugin and its manifest</span><span class="visually-hidden">, done</span></span></a></li>
+<li><a href="provision.html" aria-current="step"><span class="n" aria-hidden="true">2</span><span><span class="verb">Provision</span><span class="what">Fetch it at an exact commit</span><span class="visually-hidden">, current step</span></span></a></li>
+<li><a href="configure.html"><span class="n" aria-hidden="true">3</span><span><span class="verb">Configure</span><span class="what">Turn it on for a wiki</span><span class="visually-hidden">, not started</span></span></a></li>
+<li><a href="harness.html"><span class="n" aria-hidden="true">4</span><span><span class="verb">Harness</span><span class="what">Check it does no harm</span><span class="visually-hidden">, not started</span></span></a></li>
+</ol>
+<h2>Plugins</h2>
+<ul class="plugins">
+<li class="current"><a href="index.html">ProgBlocks</a></li>
+<li><a href="mint.html">+ Mint a new plugin</a></li>
+</ul>
+</nav>
+<main class="main" id="main">
+<p class="kicker">Step 2 of 4 · Provision</p>
+<h1>Provision ProgBlocks</h1>
+<p class="lede">Provisioning fetches the plugin's upstream code at one exact commit. Pinning to a commit, not a branch, means the plugin never changes until you choose to move the pin.</p>
+<form method="get" action="provision-preview.html">
+<div class="field"><label for="repo">Upstream repository</label><input type="text" id="repo" name="repo" value="https://github.com/metadatastician/progblocks" class="mono" aria-describedby="repo-hint"><p class="field-hint" id="repo-hint">Where the plugin's own code lives. It is read, never written.</p></div>
+<div class="field"><label for="commit">Commit</label><input type="text" id="commit" name="commit" value="ccb412289d736abc6aea5609ed50bb53d90e9388" class="mono" aria-describedby="commit-hint"><p class="field-hint" id="commit-hint">The full 40-character commit ID. A branch or tag name is refused because it can move.</p></div>
+<div class="actions"><button class="btn secondary" type="submit" formaction="provision-preview.html">Preview</button><button class="btn" type="submit" formaction="provision-done.html" disabled title="Preview first">Provision</button><a class="cancel" href="index.html">Cancel</a></div>
+<p class="field-hint">The action stays unavailable until you have seen the preview.</p>
+</form>
+</main>
+<aside class="context" aria-label="About this plugin">
+<h2>This plugin</h2>
+<div class="card"><dl>
+<dt>Name</dt><dd>ProgBlocks</dd>
+<dt>ID</dt><dd class="mono">c39f8b97-e19b-88cf-bc7f-15c773f72113</dd>
+<dt>ID kind</dt><dd>UUID v8, profile C</dd>
+<dt>Crate</dt><dd class="mono">berry-blocks-progblocks</dd>
+<dt>Upstream</dt><dd><a href="https://github.com/metadatastician/progblocks">metadatastician/<wbr>progblocks</a></dd>
+<dt>Pinned at</dt><dd class="mono">not yet</dd>
+<dt>Profiles</dt><dd>static, enhanced</dd>
+</dl></div>
+<h2>Independence</h2>
+<ul class="checklist">
+<li class="yes">BerryWiki is not modified</li>
+<li class="yes">ProgBlocks is not modified</li>
+<li class="yes">Neither depends on this plugin</li>
+<li class="yes">Static profile has no script</li>
+</ul>
+<h2>Last checks</h2>
+<p class="evidence">Not run yet.</p>
+</aside>
+</div>
+</body>
+</html>
