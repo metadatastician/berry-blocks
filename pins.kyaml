@@ -1,0 +1,14 @@
+# SPDX-License-Identifier: MPL-2.0
+# The exact commits this lab integrates. Bump one line at a time, in a PR,
+# after the lab's tests pass against the new commit. berrywiki.commit must
+# equal the berrywiki-render rev in Cargo.toml (tests/pins.rs checks).
+{
+  berrywiki: {
+    repo: "https://github.com/metadatastician/berrywiki",
+    commit: "9bf43190e799573ccc4b08d306e50affeb4228bb",
+  },
+  progblocks: {
+    repo: "https://github.com/metadatastician/progblocks",
+    commit: "ccb412289d736abc6aea5609ed50bb53d90e9388",
+  },
+}

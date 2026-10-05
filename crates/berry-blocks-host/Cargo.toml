@@ -1,0 +1,16 @@
+# SPDX-License-Identifier: MPL-2.0
+[package]
+name = "berry-blocks-host"
+description = "Plugin host for BerryWiki pages: finds fence runs a block claims, lets BerryWiki render the page, then substitutes the block's HTML."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[dependencies]
+berrywiki-render.workspace = true
+comrak.workspace = true
+
+[lints]
+workspace = true

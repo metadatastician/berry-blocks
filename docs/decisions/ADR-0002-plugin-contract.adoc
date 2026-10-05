@@ -1,0 +1,66 @@
+// SPDX-License-Identifier: MPL-2.0
+= ADR-0002: The block (plugin) contract — draft
+:revdate: 2026-10-05
+:status: Proposed
+
+== Context
+
+BerryWiki's future plugin system (owner, 2026-10-05) is to include a GUI wizard
+for *minting*, *provisioning*, *configuring* and *harnessing* plugins. Plugins
+are a BerryWiki v1 non-goal, so the design starts here, outside BerryWiki, with
+one real plugin (ProgBlocks) driving it.
+
+== Decision (current contract, implemented in `crates/berry-blocks-host`)
+
+A *block* implements:
+
+[source,rust]
+----
+trait Block {
+    fn name(&self) -> &'static str;
+    fn claims(&self, fence: &Fence) -> bool;               // e.g. has `variant=`
+    fn continues(&self, previous: &Fence, next: &Fence) -> bool;
+    fn render(&self, run: &FenceRun, profile: Profile) -> String;
+    fn assets(&self, profile: Profile) -> Vec<Asset>;
+}
+----
+
+* *Input surface:* top-level fenced code blocks only, identified by their info
+  string (`lang key=value key="quoted value" flag`). A page that uses no claimed
+  fence renders byte-identically to BerryWiki.
+* *Profiles:* `Static` (no script; the host rejects a script asset and checks the
+  output) and `Enhanced` (static markup plus optional module scripts). A block
+  must render its full content in `Static`; `Enhanced` may only add to it.
+* *Output:* an HTML fragment the block is responsible for escaping.
+* *Assets:* stylesheets and module scripts, page-relative, de-duplicated.
+* *Manifest:* each plugin carries a praxis deed
+  (`plugins/<name>/<name>.plugin_praxis.deed`) with its identity as a UUID v8
+  profile C (domain `berry-blocks-plugin`), what it claims, its profiles, and
+  the commit it is pinned to.
+
+== Road to the wizard (not built yet)
+
+Each step lands as its own working increment.
+
+[cols="1,3,3"]
+|===
+| Step | Wizard verb | What it needs first
+
+| 2 | *Mint*: scaffold a new block crate and manifest from a form | a template crate and a generator that emits a manifest which passes `deed_lint`
+| 3 | *Provision*: fetch a plugin at a pinned commit | `pins.kyaml` generalised from two fixed projects to a list of plugins
+| 4 | *Configure*: per-wiki choice of plugins and profile | a KYAML config file read by `berry-blocks render`
+| 5 | *Harness*: run a plugin against a wiki and report | the conformance, escaping and browser checks this repo already runs, packaged per plugin
+|===
+
+The wizard is server-rendered HTML forms with no script, the same way
+BerryWiki's own UI works. It is therefore usable inside BerryWiki's rules if
+BerryWiki ever adopts it.
+
+== Open questions
+
+. Fences only, or also other node types (tables, headings)? Fences are enough
+  for ProgBlocks; a second plugin should decide this.
+. In-process Rust blocks versus out-of-process plugins (WASM, a subprocess)?
+  In-process is simplest now; a third-party plugin needs isolation.
+. Will BerryWiki take the render hook in `docs/proposals/`? If it does, the
+  marker workaround is deleted.

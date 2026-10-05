@@ -1,0 +1,16 @@
+# SPDX-License-Identifier: MPL-2.0
+[package]
+name = "berry-blocks"
+description = "Command line for the berry-blocks lab."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[dependencies]
+berry-blocks-host = { path = "../berry-blocks-host" }
+berry-blocks-progblocks = { path = "../berry-blocks-progblocks" }
+
+[lints]
+workspace = true

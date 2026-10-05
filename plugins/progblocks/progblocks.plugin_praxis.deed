@@ -1,0 +1,22 @@
+;; SPDX-License-Identifier: MPL-2.0
+;
+; Manifest of berry-blocks plugin #1, per ADR-0002 (draft contract).
+(praxis-deed
+  :schema-version "1.0.0"
+  :canonical-name "progblocks-block"
+  :beholding-chora #u5"estate/chora"
+  ; UUID v8 profile C over "berry-blocks-plugin:progblocks".
+  (plugin
+    :id "c39f8b97-e19b-88cf-bc7f-15c773f72113"
+    :id-profile C
+    :id-domain "berry-blocks-plugin"
+    :crate "berry-blocks-progblocks"
+    :claims "fenced code blocks whose info string has variant="
+    :run-key "group"
+    :profiles (static enhanced)
+    :static-assets ()
+    :enhanced-assets ("progblocks/prog-block.js"))
+  (upstream
+    :repo "https://github.com/metadatastician/progblocks"
+    :commit "ccb412289d736abc6aea5609ed50bb53d90e9388"
+    :interface "<prog-block> with <template data-variant> children"))

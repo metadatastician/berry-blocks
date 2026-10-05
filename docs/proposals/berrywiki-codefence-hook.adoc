@@ -1,0 +1,41 @@
+// SPDX-License-Identifier: MPL-2.0
+= Proposal to BerryWiki: an optional fence-renderer parameter
+:revdate: 2026-10-05
+:status: Draft — not yet raised with BerryWiki
+
+== Problem
+
+`berrywiki_render::render_markdown(&str)` keeps only the first word of a fence's
+info string. `variant=macOS group=os` is discarded, because comrak's
+`full_info_string` is off and no renderer plugin is passed. A consumer can
+therefore not render a fence differently without re-implementing BerryWiki's
+safety rules: escaping, URL neutralising and heading levels.
+
+berry-blocks works around this today. It swaps claimed fence runs for one-off
+marker fences in the Markdown before calling `render_markdown`, then replaces
+the markers in the output. That is safe, and it is tested byte-for-byte
+against BerryWiki's fixture wiki, but it is indirect.
+
+== Proposal
+
+Add, without changing `render_markdown`:
+
+[source,rust]
+----
+pub fn render_markdown_with(markdown: &str, fences: &dyn FenceRenderer) -> String;
+pub trait FenceRenderer {
+    /// Return Some(html) to replace a fence, None to keep BerryWiki's rendering.
+    fn render(&self, lang: &str, meta: &str, code: &str) -> Option<String>;
+}
+----
+
+* BerryWiki keeps its safety policy for everything else on the page.
+* BerryWiki's own server never passes a renderer, so the no-script guarantee,
+  the Solo profile and every existing test are untouched.
+* Grouping consecutive fences stays the consumer's job, done by locating fences
+  before rendering, as berry-blocks does now.
+
+== Why BerryWiki might say no
+
+The change widens the public surface of a crate whose whole job is a safety
+policy. Saying no is a reasonable answer: the marker workaround keeps working.
