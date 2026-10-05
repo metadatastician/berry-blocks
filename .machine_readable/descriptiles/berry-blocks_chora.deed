@@ -1,0 +1,75 @@
+;; SPDX-License-Identifier: MPL-2.0
+;
+; The repo deed of berry-blocks: the single machine-readable record of the repo
+; (one-deed-per-repo doctrine, standards#837). Grammar: standards
+; 1-formats/deed/spec/abnf/deed.abnf.
+(repo-deed
+  :schema-version "1.0.0"
+  :canonical-name "berry-blocks"
+  :beholding-chora #u5"estate/chora"
+  ; uuidgen --sha1 --namespace @url --name "github.com/metadatastician/berry-blocks"
+  ; -> febe3459-2adb-533b-8e62-2d9dc4268eb7
+  :repo-uuid #u5"github.com/metadatastician/berry-blocks"
+  (identity
+    :primary-forge github
+    :owner "metadatastician"
+    :prefixed-name "kn-berry-blocks"
+    ; UUID v8 profile C (ADR-008, owner decision 2026-10-05, ahead of ratification):
+    ; SHA-256("estate-repo-identity:github.com/metadatastician/berry-blocks"), bytes 0..15,
+    ; byte6 = (byte6 & 0x0f) | 0x80, byte8 = (byte8 & 0x3f) | 0x80.
+    :uuid-v8 "4b81d740-642b-88c0-9577-e183c964f88e"
+    :uuid-v8-profile C
+    :uuid-v8-domain "estate-repo-identity")
+  (manifest
+    :last-updated "2026-10-05"
+    :project "berry-blocks"
+    :purpose "Integration lab and plugin host for BerryWiki; ProgBlocks is the first plugin. Depends on BerryWiki and ProgBlocks; neither depends on it."
+    :read-order ("README.md" "AGENTS.md" "docs/decisions/ADR-0001-independence-and-pins.adoc" "docs/decisions/ADR-0002-plugin-contract.adoc")
+    (policy :rules ("Never change BerryWiki or ProgBlocks from here; take needs to them as proposals in docs/proposals/." "The static profile never contains script." "BerryWiki fixture pages must render byte-identically through the host." "pins.kyaml and the berrywiki-render rev in Cargo.toml must agree.")))
+  (forges
+    :github "metadatastician/berry-blocks"
+    :gitlab ""
+    :bitbucket "")
+  (lineage
+    :type standalone
+    :parent ""
+    :born "2026-10-05"
+    :previous-names ()
+    :instantiated-from "")
+  (status
+    :phase incubating
+    :since "2026-10-05"
+    :present #t
+    :aliases ()
+    :merged-into ""
+    :superseded-by ""
+    :successors ()
+    :ended ""
+    (history
+      (entry :phase incubating :since "2026-10-05" :note "Created as the BerryWiki and ProgBlocks integration lab and the basis of a future BerryWiki plugin system.")))
+  (maturity
+    :level experimental
+    :since "2026-10-05")
+  (meta
+    :version "0.1.0"
+    :last-updated "2026-10-05"
+    :type binary
+    :languages (rust javascript)
+    :license MPL-2.0
+    :author "Jonathan D.A. Jewell (hyperpolymath)"
+    :build-tool cargo
+    :container-runtime none
+    :ci-platform github-actions
+    :package-manager cargo)
+  (ecosystem
+    :project "berry-blocks"
+    :ecosystem "metadatastician"
+    :position-type "integration lab / plugin host"
+    :purpose "Find out how BerryWiki and ProgBlocks work together, and grow BerryWiki's plugin system (mint, provision, configure, harness) outside BerryWiki."
+    :not ("a dependency of BerryWiki or ProgBlocks" "a released product" "served by BerryWiki")
+    :pipeline-position "consumer of both"
+    :chain "berrywiki-render + progblocks -> berry-blocks (lab pages)"
+    :pipeline-notes "Pinned commits in pins.kyaml."
+    :coordination ""
+    (related :name "berrywiki" :relationship consumer :notes "berry-blocks consumes berrywiki-render at a pinned commit.")
+    (related :name "progblocks" :relationship consumer :notes "berry-blocks consumes ProgBlocks at a pinned commit.")))

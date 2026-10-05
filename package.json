@@ -1,0 +1,1 @@
+{"description":"Browser checks for the berry-blocks lab (not shipped).","devDependencies":{"axe-core":"^4.11.0","playwright-core":"^1.56.0"},"license":"MPL-2.0","name":"berry-blocks-tools","private":true}

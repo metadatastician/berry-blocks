@@ -1,0 +1,18 @@
+# SPDX-License-Identifier: MPL-2.0
+[package]
+name = "berry-blocks-progblocks"
+description = "ProgBlocks as a berry-blocks block: variant fences rendered as static HTML, optionally upgraded by <prog-block>."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[dependencies]
+berry-blocks-host = { path = "../berry-blocks-host" }
+
+[dev-dependencies]
+berrywiki-render.workspace = true
+
+[lints]
+workspace = true

@@ -1,0 +1,48 @@
+// SPDX-License-Identifier: MPL-2.0
+= Static vs enhanced: the first comparison
+:revdate: 2026-10-05
+
+Owner question: BerryWiki must never depend on JavaScript, and ProgBlocks is a
+JavaScript web component. Which integration model works? Both were built and
+measured on the lab wiki (`fixtures/lab-wiki`, 4 pages), pinned to BerryWiki
+`9bf4319` and ProgBlocks `ccb4122`.
+
+image::../assets/2026-10-05-static-enhanced-nojs.png[Static, enhanced with JavaScript, enhanced without JavaScript]
+
+== Results
+
+[cols="2,2,2"]
+|===
+| Measure | Static profile | Enhanced profile
+
+| Script in pages | none (asserted in the test suite and by the browser check) | one module script, ProgBlocks
+| axe-core, WCAG 2.0–2.2 A/AA + best practice, light and dark | 0 violations, 0 needing review, on all 5 pages | 0 violations, 0 needing review, on all 5 pages
+| Readable without JavaScript | yes: every variant is a native `<details>` | yes: identical to static (checked with JavaScript disabled)
+| With JavaScript | no change | tabs, editable variables, Copy, Download
+| Reader's choice remembered | no | yes, across pages (`persist`; checked by navigating Install → Upgrade)
+| Install-ripgrep page size | 1,671 bytes | 2,073 bytes (+402: the `<template>` copies)
+| Shared cost | none | 21,391 bytes of ProgBlocks JS and CSS, fetched once
+| BerryWiki could serve it today | yes in principle: no script, and plain HTML | no: ADR-0003 forbids hand-written script
+| Pages with no variant fences | byte-identical to BerryWiki | byte-identical to BerryWiki
+|===
+
+== Reading
+
+* *They are not alternatives.* The enhanced profile is the static profile plus
+  an optional upgrade. A reader without script, or a BerryWiki that never
+  serves script, gets the static result. That is the progressive-enhancement
+  shape both projects' charters already ask for.
+* *Static is the one BerryWiki could adopt.* It needs a fence-renderer hook
+  (`docs/proposals/berrywiki-codefence-hook.adoc`) and no script at all.
+* *Enhanced belongs to hosts that allow script*: documentation sites, or a
+  future BerryWiki profile under ADR-0007 once a provenance manifest exists.
+  ProgBlocks is hand-written, so ADR-0007's generated-only rule still excludes it.
+
+== Not measured yet
+
+* Screen-reader behaviour of the `<details>` groups (see ProgBlocks' script on
+  its wiki Accessibility page; the same procedure applies).
+* Author effort beyond this one syntax: no author outside the lab has written
+  variant fences yet.
+* Rendering on GitHub's own wiki. GitHub shows the fences as ordinary code
+  blocks; that is expected from the Markdown spec but not yet checked live.

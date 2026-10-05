@@ -1,0 +1,67 @@
+# SPDX-License-Identifier: MPL-2.0
+# This workflow is managed by gh actions-lock.
+
+{
+  name: "CI",
+  on: {
+    push: {
+      branches: [
+        "main",
+      ],
+    },
+    pull_request: {
+      branches: [
+        "main",
+      ],
+    },
+  },
+  # Read-only default; no job needs more.
+  permissions: {
+    contents: "read",
+  },
+  jobs: {
+    lab: {
+      runs-on: "ubuntu-latest",
+      timeout-minutes: 20,
+      permissions: {
+        contents: "read",
+      },
+      steps: [
+        {
+          uses: "actions/checkout@v7.0.1",
+        },
+        {
+          name: "Fetch the pinned BerryWiki and ProgBlocks",
+          run: "./scripts/fetch-pins.sh",
+        },
+        {
+          name: "Set up Rust",
+          uses: "dtolnay/rust-toolchain@master",
+          with: {
+            toolchain: "stable",
+            components: "rustfmt, clippy",
+          },
+        },
+        {
+          name: "Format, lint and test",
+          run: "cargo fmt --all -- --check && cargo clippy --workspace --all-targets -- -D warnings && cargo test --workspace",
+        },
+        {
+          name: "Set up Bun",
+          uses: "oven-sh/setup-bun@v2.2.0",
+          with: {
+            bun-version: "1.3.14",
+          },
+        },
+        {
+          name: "Render both profiles and check them in Chrome",
+          run: "bun install --frozen-lockfile && cargo run -q -p berry-blocks -- render --profile static fixtures/lab-wiki out/static && cargo run -q -p berry-blocks -- render --profile enhanced fixtures/lab-wiki out/enhanced && CHROMIUM_PATH=\"$(command -v google-chrome)\" bun tools/check-pages.mjs out/static out/enhanced",
+        },
+        {
+          name: "JSON is JCS canonical",
+          run: "bun vendor/progblocks/tools/jcs.mjs check $(git ls-files '*.json')",
+        },
+      ],
+    },
+  },
+}

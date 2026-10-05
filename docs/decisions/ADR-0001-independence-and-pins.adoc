@@ -1,0 +1,42 @@
+// SPDX-License-Identifier: MPL-2.0
+= ADR-0001: Independence, and how berry-blocks consumes its two projects
+:revdate: 2026-10-05
+:status: Accepted
+
+== Context
+
+BerryWiki and ProgBlocks are related projects that must cooperate without
+becoming interdependent (owner's Project Independence Charter). BerryWiki may
+consume ProgBlocks; ProgBlocks must never require BerryWiki; if either
+disappears, the other keeps working; coupling happens only through documented
+interfaces. BerryWiki additionally never serves hand-written script (its
+ADR-0003, ADR-0007) and lists plugins as a v1 non-goal.
+
+The owner asked for one repository where the two are put together, which is
+also the starting point for a future BerryWiki plugin system.
+
+== Decision
+
+. berry-blocks depends on both projects. Neither depends on berry-blocks or on
+  each other. Removing this repository changes nothing in either.
+. The interfaces used are the public ones only:
+  BerryWiki's `berrywiki_render::render_markdown` (a library call) and
+  ProgBlocks' `<prog-block>` element with `<template data-variant>` children
+  (its documented authoring API). No private function of either is copied or
+  called.
+. Each project is pinned to one commit in `pins.kyaml`
+  (owner choice: pinned commits fetched by script). BerryWiki is also a Cargo
+  git dependency at the same rev; `tests/pins.rs` keeps the two equal.
+  `scripts/fetch-pins.sh` checks out each pin into the gitignored `vendor/`.
+. When the lab needs something a project does not offer, it writes a proposal
+  under `docs/proposals/` for that project to accept or reject. It never patches
+  either project from here.
+
+== Consequences
+
+* The lab's pages are a lab artefact. BerryWiki does not serve them, and the
+  enhanced profile's script is never part of BerryWiki.
+* A pin bump is a reviewed one-line change, tested before it lands.
+* The workaround in the host (markers around BerryWiki's render) exists only
+  because of the missing interface described in
+  `docs/proposals/berrywiki-codefence-hook.adoc`.

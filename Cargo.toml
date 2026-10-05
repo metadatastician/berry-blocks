@@ -1,0 +1,27 @@
+# SPDX-License-Identifier: MPL-2.0
+[workspace]
+resolver = "2"
+members = [
+    "crates/berry-blocks-host",
+    "crates/berry-blocks-progblocks",
+    "crates/berry-blocks-cli",
+]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.89"
+license = "MPL-2.0"
+repository = "https://github.com/metadatastician/berry-blocks"
+
+[workspace.dependencies]
+# BerryWiki is consumed ONLY through its public render function, pinned to one
+# commit. The rev must equal pins.kyaml's berrywiki.commit (checked by
+# tests/pins.rs). BerryWiki never depends on this repository.
+berrywiki-render = { git = "https://github.com/metadatastician/berrywiki", rev = "9bf43190e799573ccc4b08d306e50affeb4228bb" }
+# Same comrak line as berrywiki-render; used only to locate fences by source
+# position, never to render.
+comrak = { version = "0.54", default-features = false }
+
+[workspace.lints.rust]
+unsafe_code = "forbid"
