@@ -40,17 +40,23 @@ struct Args {
     progblocks: PathBuf,
     wiki: PathBuf,
     out: PathBuf,
+    /// A wiki configuration (`--config`); its wiki, profile and plugins win.
+    config: Option<PathBuf>,
 }
 
 /// Parses `render` arguments; returns a usage message on error.
 fn parse_args(raw: &[String]) -> Result<Args, String> {
-    let usage = "usage: berry-blocks render --profile static|enhanced [--progblocks DIR] WIKI OUT";
+    let usage = "usage: berry-blocks render --profile static|enhanced [--progblocks DIR] WIKI OUT\n       berry-blocks render --config wikis/NAME.kyaml [--progblocks DIR] OUT";
     let mut it = raw.iter();
     if it.next().map(String::as_str) != Some("render") {
         return Err(usage.into());
     }
-    let (mut profile, mut progblocks, mut positional) =
-        (None, PathBuf::from("vendor/progblocks/src"), Vec::new());
+    let (mut profile, mut progblocks, mut positional, mut config) = (
+        None,
+        PathBuf::from("vendor/progblocks/src"),
+        Vec::new(),
+        None,
+    );
     while let Some(arg) = it.next() {
         match arg.as_str() {
             "--profile" => {
@@ -61,8 +67,22 @@ fn parse_args(raw: &[String]) -> Result<Args, String> {
                 }
             }
             "--progblocks" => progblocks = it.next().ok_or(usage)?.into(),
+            "--config" => config = Some(PathBuf::from(it.next().ok_or(usage)?)),
             other => positional.push(PathBuf::from(other)),
         }
+    }
+    if let Some(config) = config {
+        let [out] = <[PathBuf; 1]>::try_from(positional).map_err(|_| usage.to_string())?;
+        if profile.is_some() {
+            return Err("--config sets the profile; do not also pass --profile".into());
+        }
+        return Ok(Args {
+            profile: Profile::Static,
+            progblocks,
+            wiki: PathBuf::new(),
+            out,
+            config: Some(config),
+        });
     }
     match (profile, <[PathBuf; 2]>::try_from(positional)) {
         (Some(profile), Ok([wiki, out])) => Ok(Args {
@@ -70,9 +90,22 @@ fn parse_args(raw: &[String]) -> Result<Args, String> {
             progblocks,
             wiki,
             out,
+            config: None,
         }),
         _ => Err(usage.into()),
     }
+}
+
+/// Takes the wiki folder and profile from `--config`, when one was given.
+fn with_config(mut args: Args) -> Result<Args, String> {
+    if let Some(path) = &args.config {
+        let text = fs::read_to_string(path).map_err(|e| format!("{}: {e}", path.display()))?;
+        let cfg = berry_blocks_configure::WikiConfig::parse(&text)
+            .map_err(|e| format!("{}: {e}", path.display()))?;
+        args.wiki = cfg.wiki_dir(Path::new("."));
+        args.profile = cfg.profile();
+    }
+    Ok(args)
 }
 
 /// Wraps a rendered fragment in an accessible HTML document.
@@ -125,11 +158,19 @@ fn render(args: &Args) -> Result<usize, String> {
             )
         })
         .collect();
-    let block = ProgBlocks::default();
+    let default_block = ProgBlocks::default();
+    let configured = match &args.config {
+        Some(path) => Some(berry_blocks_configure::load(path)?.1),
+        None => None,
+    };
+    let blocks: Vec<&dyn berry_blocks_host::Block> = match &configured {
+        Some(b) => b.iter().map(|b| b.as_ref()).collect(),
+        None => vec![&default_block],
+    };
     let mut needs_progblocks = false;
     for page in &pages {
         let md = fs::read_to_string(page).map_err(|e| format!("{}: {e}", page.display()))?;
-        let rendered = render_page(&md, &[&block], args.profile)
+        let rendered = render_page(&md, &blocks, args.profile)
             .map_err(|e| format!("{}: {e}", page.display()))?;
         needs_progblocks |= !rendered.assets.is_empty();
         let title = stem(page).replace(['-', '_'], " ");
@@ -200,7 +241,10 @@ fn main() -> ExitCode {
     if raw.first().map(String::as_str) == Some("wizard") {
         return wizard(&raw);
     }
-    match parse_args(&raw).and_then(|a| render(&a).map(|n| (n, a))) {
+    match parse_args(&raw)
+        .and_then(with_config)
+        .and_then(|a| render(&a).map(|n| (n, a)))
+    {
         Ok((n, a)) => {
             println!(
                 "rendered {n} pages to {} ({:?} profile)",

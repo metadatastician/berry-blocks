@@ -107,7 +107,7 @@ fn preview_block(p: &Plan) -> String {
 }
 
 /// Marks lines removed and added between two versions of a small file.
-fn diff(before: &str, after: &str) -> String {
+pub(crate) fn diff(before: &str, after: &str) -> String {
     let b: Vec<&str> = before.lines().collect();
     let a: Vec<&str> = after.lines().collect();
     let mut out = Vec::new();

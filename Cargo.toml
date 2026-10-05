@@ -7,6 +7,7 @@ members = [
     "crates/berry-blocks-registry",
     "crates/berry-blocks-mint",
     "crates/berry-blocks-provision",
+    "crates/berry-blocks-configure",
     "crates/berry-blocks-wizard",
     "crates/berry-blocks-cli",
 ]

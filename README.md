@@ -77,8 +77,15 @@ commit, after checking that the commit exists (a branch or tag name is refused),
 that its licence is compatible with MPL-2.0, and that every file the plugin
 needs is there. The preview shows the check results and the exact changes to
 `pins.kyaml` and the plugin's manifest. A plugin whose code lives in
-berry-blocks is shown as "not needed". Configure and Harness are designed but
-not built yet, and their screens say so.
+berry-blocks is shown as "not needed".
+
+**Configure** is built. It turns registered plugins on for one wiki, sets
+their options, and chooses the static or enhanced profile. It saves the result
+as `wikis/<name>.kyaml`. The preview renders every page of the wiki to report
+which pages would change. Render a configuration with
+`berry-blocks render --config wikis/<name>.kyaml OUT`. Plugins are listed in
+`crates/berry-blocks-registry`; Mint adds each new plugin there, and that edit
+appears in Mint's preview. Harness is designed but not built yet.
 
 ## Documents
 
