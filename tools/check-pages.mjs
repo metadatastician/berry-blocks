@@ -98,12 +98,13 @@ async function checkProfile(browser, dir, axe) {
     await p2.goto(base + 'Install-ripgrep.html');
     const shown = await p2.evaluate(() => ({
       summaries: [...document.querySelectorAll('.bb-variant summary')].map((s) => s.textContent),
-      code: document.querySelector('.bb-variant pre')?.innerText ?? '',
+      code: [...document.querySelectorAll('.bb-variant pre')].map((p) => p.textContent.trim()),
     }));
     const variantsOk = shown.summaries.join() === 'macOS,Windows,Linux';
-    const codeOk = shown.code.includes('brew install ripgrep');
+    const expected = ['brew install ripgrep', 'winget install ripgrep', 'sudo apt-get install ripgrep'];
+    const codeOk = JSON.stringify(shown.code) === JSON.stringify(expected);
     if (!variantsOk) fail(`no-JS: variants ${shown.summaries.join()}`);
-    if (!codeOk) fail(`no-JS: first variant code missing (${shown.code})`);
+    if (!codeOk) fail(`no-JS: variant code ${JSON.stringify(shown.code)}, expected ${JSON.stringify(expected)}`);
     summary.noJsReadable = variantsOk && codeOk;
     await nojs.close();
   }

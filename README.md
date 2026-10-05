@@ -54,7 +54,7 @@ cargo run -p berry-blocks -- render --profile enhanced fixtures/lab-wiki out/enh
 bun install && CHROMIUM_PATH=/path/to/chrome bun tools/check-pages.mjs out/static out/enhanced
 ```
 
-Serve `out/enhanced` over HTTP to see the tabs; browsers do not run module
+Open `_pages.html` for the page list. Serve `out/enhanced` over HTTP to see the tabs; browsers do not run module
 scripts from `file://`.
 
 ## Documents

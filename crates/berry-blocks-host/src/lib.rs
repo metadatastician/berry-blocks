@@ -221,7 +221,15 @@ fn locating_options() -> Options<'static> {
 }
 
 /// Collects top-level fence runs that some block claims, in document order.
+///
+/// Fences join one run only when nothing but blank lines separates them.
+/// Some Markdown constructs, such as link reference definitions, produce no
+/// AST node, so AST adjacency alone would swallow them into the replaced span.
 fn locate_runs(markdown: &str, blocks: &[&dyn Block]) -> Vec<LocatedRun> {
+    let lines: Vec<&str> = markdown.split_inclusive('\n').collect();
+    let only_blank_between = |after: usize, before: usize| {
+        (after + 1..before).all(|n| lines.get(n - 1).is_none_or(|l| l.trim().is_empty()))
+    };
     let arena = Arena::new();
     let root = parse_document(&arena, markdown, &locating_options());
     let mut runs: Vec<LocatedRun> = Vec::new();
@@ -236,7 +244,11 @@ fn locate_runs(markdown: &str, blocks: &[&dyn Block]) -> Vec<LocatedRun> {
             Some(f) => {
                 let owner = blocks.iter().position(|b| b.claims(&f));
                 match (owner, previous.take()) {
-                    (Some(b), Some((pb, pf, _))) if b == pb && blocks[b].continues(&pf, &f) => {
+                    (Some(b), Some((pb, pf, prev_end)))
+                        if b == pb
+                            && blocks[b].continues(&pf, &f)
+                            && only_blank_between(prev_end, start) =>
+                    {
                         let current = runs.last_mut().expect("a previous claimed fence has a run");
                         current.last_line = end;
                         current.run.fences.push(f.clone());
@@ -419,6 +431,20 @@ mod tests {
         assert!(r.html.contains("<p>RUN 1</p>"));
         assert!(r.html.contains("<p>B</p>"));
         assert_eq!(r.assets, vec![Asset::ModuleScript("x.js".into())]);
+    }
+
+    #[test]
+    /// Content with no AST node (a link reference definition) between two
+    /// claimed fences splits the run, so it is never deleted from the page.
+    fn reference_definitions_between_fences_survive() {
+        let md = "```x\n1\n```\n\n[ref]: https://example.org\n\n```x\n2\n```\n\nSee [docs][ref].\n";
+        let r = render_page(md, &[&Fixed], Profile::Static).unwrap();
+        assert_eq!(r.runs, 2);
+        assert!(
+            r.html.contains("<a href=\"https://example.org\">docs</a>"),
+            "{}",
+            r.html
+        );
     }
 
     #[test]

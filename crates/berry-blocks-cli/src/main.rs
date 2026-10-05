@@ -6,7 +6,7 @@
 //! ```
 //!
 //! Writes `OUT/<page>.html` for every `*.md` page (files starting with `_`, such
-//! as `_Sidebar.md`, are skipped) and `OUT/index.html`. The enhanced profile also
+//! as `_Sidebar.md`, are skipped) and the listing `OUT/_pages.html`. The enhanced profile also
 //! copies ProgBlocks' `prog-block.js` and `prog-block.css` from DIR (default
 //! `vendor/progblocks/src`, filled by `scripts/fetch-pins.sh`) to
 //! `OUT/progblocks/`. These pages are a lab artefact: BerryWiki itself never
@@ -29,6 +29,10 @@ code{font-family:ui-monospace,Menlo,Consolas,monospace}\
 .bb-variant pre{margin:0}\
 :focus-visible{outline:3px solid #005fcc;outline-offset:2px}\
 nav a{margin-right:1rem}";
+
+/// The page listing's file name. Pages whose names start with `_` are skipped,
+/// so no wiki page can render to this name and be overwritten by the listing.
+const LISTING: &str = "_pages.html";
 
 /// Parsed command-line options for `render`.
 struct Args {
@@ -94,9 +98,17 @@ fn page_shell(title: &str, body: &str, assets: &[Asset], nav: &str) -> String {
 
 /// Renders every page of the wiki into OUT; returns the number of pages written.
 fn render(args: &Args) -> Result<usize, String> {
-    let mut pages: Vec<PathBuf> = fs::read_dir(&args.wiki)
-        .map_err(|e| format!("{}: {e}", args.wiki.display()))?
-        .filter_map(|e| e.ok().map(|e| e.path()))
+    let entries = fs::read_dir(&args.wiki).map_err(|e| format!("{}: {e}", args.wiki.display()))?;
+    let mut paths = Vec::new();
+    for entry in entries {
+        paths.push(
+            entry
+                .map_err(|e| format!("{}: {e}", args.wiki.display()))?
+                .path(),
+        );
+    }
+    let mut pages: Vec<PathBuf> = paths
+        .into_iter()
         .filter(|p| p.extension().is_some_and(|x| x == "md"))
         .filter(|p| !p.file_name().unwrap().to_string_lossy().starts_with('_'))
         .collect();
@@ -131,7 +143,7 @@ fn render(args: &Args) -> Result<usize, String> {
         &[],
         &nav,
     );
-    fs::write(args.out.join("index.html"), index).map_err(|e| e.to_string())?;
+    fs::write(args.out.join(LISTING), index).map_err(|e| e.to_string())?;
     if needs_progblocks {
         let dest = args.out.join("progblocks");
         fs::create_dir_all(&dest).map_err(|e| e.to_string())?;
