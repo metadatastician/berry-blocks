@@ -194,3 +194,33 @@ fn field_values_are_escaped() {
     assert!(!r.body.contains("<img") && !r.body.contains("<b>"));
     let _ = PathBuf::new();
 }
+
+#[test]
+/// A client that connects and sends nothing cannot stop the wizard serving others.
+fn an_idle_connection_does_not_block_the_server() {
+    use std::io::{Read, Write};
+    use std::net::{TcpListener, TcpStream};
+    use std::time::{Duration, Instant};
+    let listener = TcpListener::bind("127.0.0.1:0").unwrap();
+    let addr = listener.local_addr().unwrap().to_string();
+    let a = App {
+        addr: addr.clone(),
+        ..app()
+    };
+    std::thread::spawn(move || {
+        berry_blocks_wizard::serve_listener(&a, listener, Duration::from_millis(300))
+    });
+    let _idle = TcpStream::connect(&addr).unwrap();
+    let start = Instant::now();
+    let mut s = TcpStream::connect(&addr).unwrap();
+    s.set_read_timeout(Some(Duration::from_secs(5))).unwrap();
+    write!(s, "GET /mint HTTP/1.1\r\nHost: {addr}\r\n\r\n").unwrap();
+    let mut reply = String::new();
+    s.read_to_string(&mut reply).unwrap();
+    assert!(reply.starts_with("HTTP/1.1 200"), "{reply}");
+    assert!(
+        start.elapsed() < Duration::from_secs(3),
+        "took {:?}",
+        start.elapsed()
+    );
+}

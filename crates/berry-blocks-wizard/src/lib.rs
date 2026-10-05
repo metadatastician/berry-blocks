@@ -16,6 +16,7 @@ use std::fs;
 use std::io::{BufRead, BufReader, Read, Write};
 use std::net::{TcpListener, TcpStream};
 use std::path::PathBuf;
+use std::time::Duration;
 
 use berry_blocks_mint::{
     apply, plan, uuid_v8_profile_c, ChangeKind, FieldError, MintError, MintRequest, Plan, LICENCES,
@@ -658,10 +659,24 @@ fn write_response(mut stream: &TcpStream, r: &Response) {
         .and_then(|_| stream.write_all(r.body.as_bytes()));
 }
 
+/// How long one connection may take to send its request or accept a reply.
+pub const IO_TIMEOUT: Duration = Duration::from_secs(10);
+
 /// Serves the wizard until the process is stopped.
 pub fn serve(app: &App) -> std::io::Result<()> {
-    let listener = TcpListener::bind(&app.addr)?;
+    serve_listener(app, TcpListener::bind(&app.addr)?, IO_TIMEOUT)
+}
+
+/// Serves on an already bound listener, one connection at a time. Each
+/// connection gets read and write timeouts, so a client that connects and
+/// sends nothing, or stops part-way, cannot stop the wizard serving others.
+pub fn serve_listener(app: &App, listener: TcpListener, timeout: Duration) -> std::io::Result<()> {
     for stream in listener.incoming().flatten() {
+        if stream.set_read_timeout(Some(timeout)).is_err()
+            || stream.set_write_timeout(Some(timeout)).is_err()
+        {
+            continue;
+        }
         match read_request(&stream) {
             Some(req) => write_response(&stream, &handle(app, &req)),
             None => write_response(&stream, &Response::status(400, "Bad request".into())),

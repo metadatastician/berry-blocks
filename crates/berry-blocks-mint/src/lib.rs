@@ -395,9 +395,15 @@ pub fn apply(req: &MintRequest, root: &Path, previewed_digest: &str) -> Result<P
             }
             let tmp = target.with_extension("berry-blocks-tmp");
             fs::write(&tmp, &c.content)?;
-            fs::rename(&tmp, &target)
+            match c.kind {
+                ChangeKind::Create => install_new(&tmp, &target),
+                ChangeKind::Modify => fs::rename(&tmp, &target),
+            }
         })();
         if let Err(e) = result {
+            if e.kind() == std::io::ErrorKind::AlreadyExists && written.is_empty() {
+                return Err(MintError::Exists(c.path.clone()));
+            }
             return Err(MintError::Io {
                 written,
                 error: format!("{}: {e}", c.path),
@@ -406,6 +412,16 @@ pub fn apply(req: &MintRequest, root: &Path, previewed_digest: &str) -> Result<P
         written.push(c.path.clone());
     }
     Ok(plan)
+}
+
+/// Installs a fully written temporary file at `target` only if nothing is
+/// there: a hard link fails atomically with `AlreadyExists`, so a file created
+/// after the preflight check is never replaced, and the target is never left
+/// half-written. The temporary file is removed either way.
+fn install_new(tmp: &Path, target: &Path) -> std::io::Result<()> {
+    let linked = fs::hard_link(tmp, target);
+    let _ = fs::remove_file(tmp);
+    linked
 }
 
 #[cfg(test)]
@@ -515,6 +531,24 @@ mod tests {
             Err(MintError::Invalid(errs)) => assert_eq!(errs[0].field, "name"),
             other => panic!("expected refusal, got {other:?}"),
         }
+    }
+
+    #[test]
+    /// A file that appears at a create target is never replaced, and no
+    /// temporary file is left behind.
+    fn install_never_replaces_an_existing_file() {
+        let dir = scratch();
+        let tmp = dir.join("new.berry-blocks-tmp");
+        let target = dir.join("target.txt");
+        fs::write(&target, "someone else's").unwrap();
+        fs::write(&tmp, "ours").unwrap();
+        let err = install_new(&tmp, &target).unwrap_err();
+        assert_eq!(err.kind(), std::io::ErrorKind::AlreadyExists);
+        assert_eq!(fs::read_to_string(&target).unwrap(), "someone else's");
+        assert!(!tmp.exists());
+        fs::write(&tmp, "ours").unwrap();
+        install_new(&tmp, &dir.join("fresh.txt")).unwrap();
+        assert_eq!(fs::read_to_string(dir.join("fresh.txt")).unwrap(), "ours");
     }
 
     #[test]
