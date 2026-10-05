@@ -217,7 +217,11 @@ fn an_idle_connection_does_not_block_the_server() {
     write!(s, "GET /mint HTTP/1.1\r\nHost: {addr}\r\n\r\n").unwrap();
     let mut reply = String::new();
     s.read_to_string(&mut reply).unwrap();
-    assert!(reply.starts_with("HTTP/1.1 200"), "{reply}");
+    assert!(
+        reply.starts_with("HTTP/1.1 200"),
+        "expected a 200 reply ({} bytes received)",
+        reply.len()
+    );
     assert!(
         start.elapsed() < Duration::from_secs(3),
         "took {:?}",
