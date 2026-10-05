@@ -64,6 +64,7 @@ scripts from `file://`.
 | [ADR-0001](docs/decisions/ADR-0001-independence-and-pins.adoc) | The independence rules and how pins work |
 | [ADR-0002](docs/decisions/ADR-0002-plugin-contract.adoc) | The plugin contract (draft) and the road to the plugin wizard |
 | [Static vs enhanced report](docs/reports/2026-10-05-static-vs-enhanced.adoc) | The measured comparison of the two models |
+| [Wizard look and feel](design/wizard/PATTERN.adoc) | The one screen pattern for mint, provision, configure, harness; clickable prototype in `design/wizard/site/` |
 | [Proposal to BerryWiki](docs/proposals/berrywiki-codefence-hook.adoc) | The one small interface that would remove the lab's workaround |
 
 ## Status

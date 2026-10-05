@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Harness ProgBlocks · berry-blocks</title>
+<link rel="stylesheet" href="wizard.css">
+</head>
+<body>
+<a class="skip-link" href="#main">Skip to content</a>
+<header>
+<div class="topbar">
+<a class="brand" href="index.html">berry-blocks</a>
+<span class="section">Plugins</span>
+<a class="spacer" href="harness.html">Checks</a>
+</div>
+<p class="status-strip"><strong>Lab mode</strong> · writes only to this berry-blocks checkout · BerryWiki and ProgBlocks are never modified · nothing happens until you press an action button</p>
+</header>
+<div class="grid">
+<nav class="rail" aria-label="Plugin steps">
+<h2 id="steps-h">Steps</h2>
+<ol class="steps" aria-labelledby="steps-h">
+<li class="done"><a href="mint.html"><span class="n" aria-hidden="true">1</span><span><span class="verb">Mint</span><span class="what">Create the plugin and its manifest</span><span class="visually-hidden">, done</span></span></a></li>
+<li class="done"><a href="provision.html"><span class="n" aria-hidden="true">2</span><span><span class="verb">Provision</span><span class="what">Fetch it at an exact commit</span><span class="visually-hidden">, done</span></span></a></li>
+<li class="done"><a href="configure.html"><span class="n" aria-hidden="true">3</span><span><span class="verb">Configure</span><span class="what">Turn it on for a wiki</span><span class="visually-hidden">, done</span></span></a></li>
+<li class="done"><a href="harness.html" aria-current="step"><span class="n" aria-hidden="true">4</span><span><span class="verb">Harness</span><span class="what">Check it does no harm</span><span class="visually-hidden">, done</span></span></a></li>
+</ol>
+<h2>Plugins</h2>
+<ul class="plugins">
+<li class="current"><a href="index.html">ProgBlocks</a></li>
+<li><a href="mint.html">+ Mint a new plugin</a></li>
+</ul>
+</nav>
+<main class="main" id="main">
+<p class="kicker">Step 4 of 4 · Harness</p>
+<h1>Harness ProgBlocks</h1>
+<div class="notice" role="status"><h2>All 9 checks pass</h2><p>ProgBlocks at ccb4122 is safe to use on lab-wiki with the enhanced profile.</p></div>
+<table class="checks"><caption class="visually-hidden">Check results</caption><thead><tr><th scope="col">Check</th><th scope="col">Result</th><th scope="col">Evidence</th></tr></thead><tbody>
+<tr><th scope="row">BerryWiki pages stay identical</th><td><span class="outcome pass">✓ Pass</span></td><td class="evidence">11 BerryWiki fixture pages, both profiles</td></tr>
+<tr><th scope="row">Untrusted text stays text</th><td><span class="outcome pass">✓ Pass</span></td><td class="evidence"><code>&lt;img src=x&gt;</code> as a variant name stayed text</td></tr>
+<tr><th scope="row">Static pages have no script</th><td><span class="outcome pass">✓ Pass</span></td><td class="evidence">5 pages checked</td></tr>
+<tr><th scope="row">Accessible in light mode</th><td><span class="outcome pass">✓ Pass</span></td><td class="evidence">0 violations, 0 to review, 5 pages</td></tr>
+<tr><th scope="row">Accessible in dark mode</th><td><span class="outcome pass">✓ Pass</span></td><td class="evidence">0 violations, 0 to review, 5 pages</td></tr>
+<tr><th scope="row">Readable without script</th><td><span class="outcome pass">✓ Pass</span></td><td class="evidence">macOS, Windows, Linux shown with their code</td></tr>
+<tr><th scope="row">Upgrades with script</th><td><span class="outcome pass">✓ Pass</span></td><td class="evidence">3 tabs on Install ripgrep</td></tr>
+<tr><th scope="row">Remembers the reader's choice</th><td><span class="outcome pass">✓ Pass</span></td><td class="evidence">Chose Linux on Install, Upgrade opened on Linux</td></tr>
+<tr><th scope="row">Pins agree</th><td><span class="outcome pass">✓ Pass</span></td><td class="evidence">ccb4122 in both</td></tr>
+</tbody></table>
+<p>Report saved as <span class="mono">reports/progblocks-lab-wiki-2026-10-05.kyaml</span>.</p>
+<div class="actions"><a class="btn secondary" href="harness.html">Run again</a><a class="cancel" href="index.html">Back to plugins</a></div>
+</main>
+<aside class="context" aria-label="About this plugin">
+<h2>This plugin</h2>
+<div class="card"><dl>
+<dt>Name</dt><dd>ProgBlocks</dd>
+<dt>ID</dt><dd class="mono">c39f8b97-e19b-88cf-bc7f-15c773f72113</dd>
+<dt>ID kind</dt><dd>UUID v8, profile C</dd>
+<dt>Crate</dt><dd class="mono">berry-blocks-progblocks</dd>
+<dt>Upstream</dt><dd><a href="https://github.com/metadatastician/progblocks">metadatastician/<wbr>progblocks</a></dd>
+<dt>Pinned at</dt><dd class="mono">ccb4122</dd>
+<dt>Profiles</dt><dd>static, enhanced</dd>
+</dl></div>
+<h2>Independence</h2>
+<ul class="checklist">
+<li class="yes">BerryWiki is not modified</li>
+<li class="yes">ProgBlocks is not modified</li>
+<li class="yes">Neither depends on this plugin</li>
+<li class="yes">Static profile has no script</li>
+</ul>
+<h2>Last checks</h2>
+<p><span class="outcome pass">All 9 checks pass</span><br><span class="evidence">Last run 2026-10-05 against fixtures/lab-wiki.</span></p>
+</aside>
+</div>
+</body>
+</html>

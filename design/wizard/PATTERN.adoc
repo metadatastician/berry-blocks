@@ -1,0 +1,66 @@
+// SPDX-License-Identifier: MPL-2.0
+= The berry-blocks screen pattern
+:revdate: 2026-10-05
+:status: Proposed for review (owner)
+
+One way to build every screen here, so every task in berry-blocks looks and
+behaves the same. Start with the plugin wizard (mint, provision, configure,
+harness), and use the same pattern for anything added later. The prototype in
+`site/` is the reference. Build it with `bun design/wizard/build.mjs`.
+
+It is taken from BerryWiki's own interface: the topbar, status strip, three
+columns, notice, error and draft banners, and Move's preview-then-act. Readers
+who know BerryWiki already know how to use it.
+
+== The five parts, always in the same place
+
+[cols="1,3"]
+|===
+| Part | Rule
+
+| Topbar and status strip
+| The strip always says what acting on this screen can touch. Example: "writes only to this berry-blocks checkout · BerryWiki and ProgBlocks are never modified".
+
+| Step rail (left)
+| Shows the four verbs, numbered and always in the same order: Mint, Provision, Configure, Harness. Each step is marked done, current or not started, in text as well as colour. Below the steps is the list of plugins.
+
+| Work column (centre)
+| Contains, in order: "Step N of 4 · Verb", a verb-first title, one plain sentence on what the step does, then the form.
+
+| Preview block
+| Appears below the form after *Preview*. It lists every file to be created, modified or left unchanged, then shows each file's full content. Additions and removals are marked.
+
+| Context panel (right)
+| Shows the plugin's identity (name, UUID v8 ID, crate, upstream, pinned commit, profiles), the independence checklist, and the last check result.
+|===
+
+== Behaviour rules
+
+. *Preview before act.* The action button stays unavailable until the preview
+  has been seen. Previewing never changes anything. This follows BerryWiki's
+  Move screen.
+. *Nothing changes on failure.* An error screen starts with "Nothing was ...
+  changed". It links each problem to its field, and marks that field as invalid
+  both visually and to screen readers.
+. *Say what happened.* A done screen states counts ("Created 4 files and
+  changed 1") and offers exactly one next step.
+. *Check results are a table:* one row per check, with the outcome in words and a
+  symbol ("✓ Pass", "✗ Fail") and the evidence beside it. A failing check
+  explains what it usually means and what to change.
+. *No script.* Every screen is a plain HTML form, as BerryWiki's are, so
+  BerryWiki could adopt it unchanged.
+. *Accessible by construction:* a skip link, landmarks, `aria-current="step"`,
+  labelled fields with hints, fieldsets with legends, and AA contrast in light
+  and dark schemes. All 14 prototype screens pass axe-core with no violations
+  and nothing needing review.
+
+== Screens in the prototype
+
+* Plugins overview.
+* Mint: form, preview, done.
+* Provision: form, preview, done, plus a refused commit.
+* Configure: form, preview, done.
+* Harness: form, all checks passing, plus one check failing.
+
+The data is real: ProgBlocks' ID, its pinned commit, and the lab's actual check
+results. The failing example is the persistence bug the lab really hit.

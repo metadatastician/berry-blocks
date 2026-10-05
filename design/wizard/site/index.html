@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Plugins · berry-blocks</title>
+<link rel="stylesheet" href="wizard.css">
+</head>
+<body>
+<a class="skip-link" href="#main">Skip to content</a>
+<header>
+<div class="topbar">
+<a class="brand" href="index.html">berry-blocks</a>
+<span class="section">Plugins</span>
+<a class="spacer" href="harness.html">Checks</a>
+</div>
+<p class="status-strip"><strong>Lab mode</strong> · writes only to this berry-blocks checkout · BerryWiki and ProgBlocks are never modified · nothing happens until you press an action button</p>
+</header>
+<div class="grid">
+<nav class="rail" aria-label="Plugin steps">
+<h2 id="steps-h">Steps</h2>
+<ol class="steps" aria-labelledby="steps-h">
+<li><a href="mint.html"><span class="n" aria-hidden="true">1</span><span><span class="verb">Mint</span><span class="what">Create the plugin and its manifest</span><span class="visually-hidden">, not started</span></span></a></li>
+<li><a href="provision.html"><span class="n" aria-hidden="true">2</span><span><span class="verb">Provision</span><span class="what">Fetch it at an exact commit</span><span class="visually-hidden">, not started</span></span></a></li>
+<li><a href="configure.html"><span class="n" aria-hidden="true">3</span><span><span class="verb">Configure</span><span class="what">Turn it on for a wiki</span><span class="visually-hidden">, not started</span></span></a></li>
+<li><a href="harness.html"><span class="n" aria-hidden="true">4</span><span><span class="verb">Harness</span><span class="what">Check it does no harm</span><span class="visually-hidden">, not started</span></span></a></li>
+</ol>
+<h2>Plugins</h2>
+<ul class="plugins">
+<li class="current"><a href="index.html">ProgBlocks</a></li>
+<li><a href="mint.html">+ Mint a new plugin</a></li>
+</ul>
+</nav>
+<main class="main" id="main">
+<p class="kicker">Plugins</p>
+<h1>Plugins</h1>
+<p class="lede">A plugin changes how certain blocks in a BerryWiki page are shown. Every plugin goes through the same four steps, always in this order, and every step shows you exactly what it will change before it changes anything.</p>
+<table class="plugins-table">
+<caption class="visually-hidden">Plugins and how far each has got</caption>
+<thead><tr><th scope="col">Plugin</th><th scope="col">Minted</th><th scope="col">Provisioned</th><th scope="col">Configured</th><th scope="col">Harnessed</th></tr></thead>
+<tbody><tr><th scope="row"><a href="harness-results.html">ProgBlocks</a></th><td class="state yes">✓ yes</td><td class="state yes">✓ ccb4122</td><td class="state yes">✓ lab-wiki</td><td class="state yes">✓ 9 of 9 pass</td></tr></tbody>
+</table>
+<div class="actions"><a class="btn" href="mint.html">Mint a new plugin</a></div>
+<h2>Screens in this prototype</h2>
+<ul>
+<li>Mint: <a href="mint.html">form</a> → <a href="mint-preview.html">preview</a> → <a href="mint-done.html">done</a></li>
+<li>Provision: <a href="provision.html">form</a> → <a href="provision-preview.html">preview</a> → <a href="provision-done.html">done</a>; and <a href="provision-error.html">a refused commit</a></li>
+<li>Configure: <a href="configure.html">form</a> → <a href="configure-preview.html">preview</a> → <a href="configure-done.html">done</a></li>
+<li>Harness: <a href="harness.html">form</a> → <a href="harness-results.html">all pass</a>; and <a href="harness-failing.html">one failing</a></li>
+</ul>
+</main>
+<aside class="context" aria-label="About this plugin">
+<h2>This plugin</h2>
+<div class="card"><dl>
+<dt>Name</dt><dd>ProgBlocks</dd>
+<dt>ID</dt><dd class="mono">c39f8b97-e19b-88cf-bc7f-15c773f72113</dd>
+<dt>ID kind</dt><dd>UUID v8, profile C</dd>
+<dt>Crate</dt><dd class="mono">berry-blocks-progblocks</dd>
+<dt>Upstream</dt><dd><a href="https://github.com/metadatastician/progblocks">metadatastician/<wbr>progblocks</a></dd>
+<dt>Pinned at</dt><dd class="mono">ccb4122</dd>
+<dt>Profiles</dt><dd>static, enhanced</dd>
+</dl></div>
+<h2>Independence</h2>
+<ul class="checklist">
+<li class="yes">BerryWiki is not modified</li>
+<li class="yes">ProgBlocks is not modified</li>
+<li class="yes">Neither depends on this plugin</li>
+<li class="yes">Static profile has no script</li>
+</ul>
+<h2>Last checks</h2>
+<p><span class="outcome pass">All 9 checks pass</span><br><span class="evidence">Last run 2026-10-05 against fixtures/lab-wiki.</span></p>
+</aside>
+</div>
+</body>
+</html>
