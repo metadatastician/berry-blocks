@@ -70,8 +70,15 @@ workspace entry), and Mint plugin writes those files and nothing else. A
 digest ties the two together, so if the form or the repository changes after
 the preview, minting is refused and nothing is written. A minted plugin builds
 and passes the repo's gates as generated; `tools/e2e-mint.sh` proves this on
-every CI run. Provision, Configure and Harness are designed but not built yet,
-and their screens say so.
+every CI run.
+
+**Provision** is built too. It pins a plugin's upstream code to one exact
+commit, after checking that the commit exists (a branch or tag name is refused),
+that its licence is compatible with MPL-2.0, and that every file the plugin
+needs is there. The preview shows the check results and the exact changes to
+`pins.kyaml` and the plugin's manifest. A plugin whose code lives in
+berry-blocks is shown as "not needed". Configure and Harness are designed but
+not built yet, and their screens say so.
 
 ## Documents
 

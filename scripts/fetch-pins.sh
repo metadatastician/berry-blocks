@@ -26,6 +26,7 @@ fetch_pin() {
     echo "${name}: fetched ${commit:0:7}"
 }
 
-for name in berrywiki progblocks; do
+# Every pin in the file: BerryWiki and each provisioned plugin.
+for name in $(yq -r 'keys | .[]' pins.kyaml); do
     fetch_pin "$name"
 done

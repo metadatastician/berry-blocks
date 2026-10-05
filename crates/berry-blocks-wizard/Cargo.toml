@@ -10,6 +10,7 @@ repository.workspace = true
 
 [dependencies]
 berry-blocks-mint = { path = "../berry-blocks-mint" }
+berry-blocks-provision = { path = "../berry-blocks-provision" }
 
 [lints]
 workspace = true
