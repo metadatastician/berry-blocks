@@ -6,9 +6,19 @@ version = 4
 name = "berry-blocks"
 version = "0.1.0"
 dependencies = [
+ "berry-blocks-configure",
  "berry-blocks-host",
  "berry-blocks-progblocks",
  "berry-blocks-wizard",
+]
+
+[[package]]
+name = "berry-blocks-configure"
+version = "0.1.0"
+dependencies = [
+ "berry-blocks-host",
+ "berry-blocks-registry",
+ "sha2",
 ]
 
 [[package]]
@@ -42,11 +52,21 @@ dependencies = [
 ]
 
 [[package]]
+name = "berry-blocks-registry"
+version = "0.1.0"
+dependencies = [
+ "berry-blocks-host",
+ "berry-blocks-progblocks",
+]
+
+[[package]]
 name = "berry-blocks-wizard"
 version = "0.1.0"
 dependencies = [
+ "berry-blocks-configure",
  "berry-blocks-mint",
  "berry-blocks-provision",
+ "berry-blocks-registry",
 ]
 
 [[package]]

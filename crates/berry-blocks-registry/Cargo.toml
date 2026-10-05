@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: MPL-2.0
 [package]
-name = "berry-blocks"
-description = "Command line for the berry-blocks lab."
+name = "berry-blocks-registry"
+description = "Every berry-blocks plugin the renderer can run, with its options. Mint adds new plugins here."
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
@@ -11,8 +11,7 @@ repository.workspace = true
 [dependencies]
 berry-blocks-host = { path = "../berry-blocks-host" }
 berry-blocks-progblocks = { path = "../berry-blocks-progblocks" }
-berry-blocks-wizard = { path = "../berry-blocks-wizard" }
-berry-blocks-configure = { path = "../berry-blocks-configure" }
+# berry-blocks:mint-dependencies (Mint inserts new plugins above this line)
 
 [lints]
 workspace = true

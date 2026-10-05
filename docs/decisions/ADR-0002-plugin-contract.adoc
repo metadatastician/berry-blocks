@@ -48,7 +48,7 @@ Each step lands as its own working increment.
 
 | 2 | *Mint*: scaffold a new block crate and manifest from a form | *Built* (`berry-blocks-mint`, `berry-blocks wizard`). Its manifests pass `deed_lint`, and generated crates pass fmt, clippy and conformance (`tools/e2e-mint.sh`)
 | 3 | *Provision*: fetch a plugin at a pinned commit | *Built* (`berry-blocks-provision`). Checks the commit exists, the licence is compatible and the files are present; `pins.kyaml` holds any number of pins
-| 4 | *Configure*: per-wiki choice of plugins and profile | a KYAML config file read by `berry-blocks render`
+| 4 | *Configure*: per-wiki choice of plugins and profile | *Built* (`berry-blocks-configure`, `berry-blocks-registry`). `wikis/<name>.kyaml` is read by `render --config`
 | 5 | *Harness*: run a plugin against a wiki and report | the conformance, escaping and browser checks this repo already runs, packaged per plugin
 |===
 
@@ -61,6 +61,8 @@ BerryWiki ever adopts it.
 . Fences only, or also other node types (tables, headings)? Fences are enough
   for ProgBlocks; a second plugin should decide this.
 . In-process Rust blocks versus out-of-process plugins (WASM, a subprocess)?
-  In-process is simplest now; a third-party plugin needs isolation.
+  Decided for now (owner default 3a, 2026-10-05): in-process, compiled into
+  `berry-blocks-registry`, which Mint maintains. A third-party plugin will
+  still need isolation.
 . Will BerryWiki take the render hook in `docs/proposals/`? If it does, the
   marker workaround is deleted.
