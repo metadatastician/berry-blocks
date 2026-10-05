@@ -18,6 +18,8 @@ use std::net::{TcpListener, TcpStream};
 use std::path::PathBuf;
 use std::time::Duration;
 
+mod provision;
+
 use berry_blocks_mint::{
     apply, plan, uuid_v8_profile_c, ChangeKind, FieldError, MintError, MintRequest, Plan, LICENCES,
 };
@@ -148,13 +150,55 @@ const STEPS: [(&str, &str, &str); 4] = [
 ];
 
 /// A plugin found in `plugins/<name>/<name>.plugin_praxis.deed`.
-struct Installed {
-    name: String,
-    id: String,
+pub(crate) struct Installed {
+    pub(crate) name: String,
+    pub(crate) id: String,
+    pub(crate) display: String,
+    pub(crate) crate_name: String,
+    pub(crate) profiles: String,
+    /// The pinned upstream commit from pins.kyaml, if provisioned.
+    pub(crate) pinned: Option<String>,
+    /// Whether the manifest names an upstream at all.
+    pub(crate) has_upstream: bool,
+    /// The upstream clause's repo, commit and files, if any.
+    pub(crate) upstream: Option<(String, String, Vec<String>)>,
 }
 
-/// Lists minted plugins by reading their manifests.
-fn installed(app: &App) -> Vec<Installed> {
+/// The first string value after `key` in a deed, if any.
+fn deed_value(text: &str, key: &str) -> Option<String> {
+    text.split(&format!("{key} \""))
+        .nth(1)
+        .and_then(|r| r.split('"').next())
+        .map(str::to_string)
+}
+
+impl Installed {
+    /// The context-panel card for this plugin.
+    pub(crate) fn card(&self) -> Card {
+        Card {
+            display: self.display.clone(),
+            id: self.id.clone(),
+            crate_name: self.crate_name.clone(),
+            pinned: self.pinned.clone(),
+            profiles: self.profiles.clone(),
+        }
+    }
+}
+
+/// What the context panel shows about one plugin.
+pub(crate) struct Card {
+    pub(crate) display: String,
+    pub(crate) id: String,
+    pub(crate) crate_name: String,
+    pub(crate) pinned: Option<String>,
+    pub(crate) profiles: String,
+}
+
+/// Lists minted plugins by reading their manifests and `pins.kyaml`.
+pub(crate) fn installed(app: &App) -> Vec<Installed> {
+    let pins = fs::read_to_string(app.root.join("pins.kyaml"))
+        .ok()
+        .and_then(|t| berry_blocks_provision::Pins::parse(&t).ok());
     let mut out = Vec::new();
     let Ok(dirs) = fs::read_dir(app.root.join("plugins")) else {
         return out;
@@ -165,13 +209,49 @@ fn installed(app: &App) -> Vec<Installed> {
         else {
             continue;
         };
-        let id = text
-            .split(":id \"")
-            .nth(1)
-            .and_then(|r| r.split('"').next())
-            .unwrap_or("unknown")
-            .to_string();
-        out.push(Installed { name, id });
+        let id = deed_value(&text, ":id").unwrap_or_else(|| "unknown".into());
+        let display = deed_value(&text, ":display").unwrap_or_else(|| name.clone());
+        let crate_name = deed_value(&text, ":crate").unwrap_or_default();
+        let profiles = if text.contains(":profiles (static enhanced)") {
+            "static, enhanced"
+        } else {
+            "static"
+        }
+        .to_string();
+        let upstream = text.find("(upstream").map(|i| {
+            let clause = &text[i..];
+            let files = clause
+                .split(":files (")
+                .nth(1)
+                .and_then(|r| r.split(')').next())
+                .map(|l| {
+                    l.split('"')
+                        .skip(1)
+                        .step_by(2)
+                        .map(str::to_string)
+                        .collect()
+                })
+                .unwrap_or_default();
+            (
+                deed_value(clause, ":repo").unwrap_or_default(),
+                deed_value(clause, ":commit").unwrap_or_default(),
+                files,
+            )
+        });
+        let pinned = pins
+            .as_ref()
+            .and_then(|p| p.get(&name))
+            .map(|p| p.commit.clone());
+        out.push(Installed {
+            has_upstream: upstream.is_some() || pinned.is_some(),
+            upstream,
+            pinned,
+            name,
+            id,
+            display,
+            crate_name,
+            profiles,
+        });
     }
     out.sort_by(|a, b| a.name.cmp(&b.name));
     out
@@ -184,7 +264,7 @@ fn rail(app: &App, current: Option<usize>) -> String {
         .enumerate()
         .map(|(i, (verb, what, href))| {
             let cur = if Some(i) == current { " aria-current=\"step\"" } else { "" };
-            let state = if Some(i) == current { "current step" } else if i == 0 { "available" } else { "not built yet" };
+            let state = if Some(i) == current { "current step" } else if i <= 1 { "available" } else { "not built yet" };
             format!("<li><a href=\"{href}\"{cur}><span class=\"n\" aria-hidden=\"true\">{n}</span><span><span class=\"verb\">{verb}</span><span class=\"what\">{what}</span><span class=\"visually-hidden\">, {state}</span></span></a></li>\n", n = i + 1)
         })
         .collect();
@@ -195,19 +275,36 @@ fn rail(app: &App, current: Option<usize>) -> String {
     format!("<nav class=\"rail\" aria-label=\"Plugin steps\">\n<h2 id=\"steps-h\">Steps</h2>\n<ol class=\"steps\" aria-labelledby=\"steps-h\">\n{items}</ol>\n<h2>Plugins</h2>\n<ul class=\"plugins\">\n{plugins}<li><a href=\"/mint\">+ Mint a new plugin</a></li>\n</ul>\n</nav>")
 }
 
-/// Renders the context panel for a plugin being minted (or none).
-fn context(req: Option<&MintRequest>) -> String {
-    let card = match req {
-        Some(r) if !r.name.is_empty() => {
-            let id = if validate_name_shape(&r.name) {
-                uuid_v8_profile_c("berry-blocks-plugin", &r.name)
-            } else {
-                "assigned at mint".into()
-            };
-            format!("<dt>Name</dt><dd>{}</dd>\n<dt>ID</dt><dd class=\"mono\">{}</dd>\n<dt>ID kind</dt><dd>UUID v8, profile C</dd>\n<dt>Crate</dt><dd class=\"mono\">berry-blocks-{}</dd>\n<dt>Pinned at</dt><dd class=\"mono\">not yet</dd>\n<dt>Profiles</dt><dd>{}</dd>",
-                esc(&r.display), esc(&id), esc(&r.name), if r.enhanced { "static, enhanced" } else { "static" })
+/// The card for a plugin that is being minted, from the form.
+fn mint_card(r: &MintRequest) -> Option<Card> {
+    if r.name.is_empty() {
+        return None;
+    }
+    let id = if validate_name_shape(&r.name) {
+        uuid_v8_profile_c("berry-blocks-plugin", &r.name)
+    } else {
+        "assigned at mint".into()
+    };
+    Some(Card {
+        display: r.display.clone(),
+        id,
+        crate_name: format!("berry-blocks-{}", r.name),
+        pinned: None,
+        profiles: if r.enhanced {
+            "static, enhanced"
+        } else {
+            "static"
         }
-        _ => "<dt>Plugin</dt><dd>none chosen yet</dd>".into(),
+        .into(),
+    })
+}
+
+/// Renders the context panel for a plugin (or none).
+pub(crate) fn context(card: Option<&Card>) -> String {
+    let card = match card {
+        Some(c) => format!("<dt>Name</dt><dd>{}</dd>\n<dt>ID</dt><dd class=\"mono\">{}</dd>\n<dt>ID kind</dt><dd>UUID v8, profile C</dd>\n<dt>Crate</dt><dd class=\"mono\">{}</dd>\n<dt>Pinned at</dt><dd class=\"mono\">{}</dd>\n<dt>Profiles</dt><dd>{}</dd>",
+            esc(&c.display), esc(&c.id), esc(&c.crate_name), esc(&c.pinned.as_deref().map(|s| s[..7.min(s.len())].to_string()).unwrap_or_else(|| "not yet".into())), esc(&c.profiles)),
+        None => "<dt>Plugin</dt><dd>none chosen yet</dd>".into(),
     };
     format!("<aside class=\"context\" aria-label=\"About this plugin\">\n<h2>This plugin</h2>\n<div class=\"card\"><dl>\n{card}\n</dl></div>\n<h2>Independence</h2>\n<ul class=\"checklist\">\n<li class=\"yes\">BerryWiki is not modified</li>\n<li class=\"yes\">ProgBlocks is not modified</li>\n<li class=\"yes\">Neither depends on this plugin</li>\n<li class=\"yes\">Static profile has no script</li>\n</ul>\n<h2>Last checks</h2>\n<p class=\"evidence\">Not run yet.</p>\n</aside>")
 }
@@ -222,12 +319,12 @@ fn validate_name_shape(name: &str) -> bool {
 }
 
 /// The one frame every screen uses.
-fn frame(
+pub(crate) fn frame(
     app: &App,
     title: &str,
     kicker: &str,
     step: Option<usize>,
-    ctx: Option<&MintRequest>,
+    ctx: Option<&Card>,
     body: &str,
 ) -> String {
     format!(
@@ -244,12 +341,19 @@ fn frame(
 fn overview(app: &App) -> Response {
     let rows: String = installed(app)
         .iter()
-        .map(|p| format!("<tr><th scope=\"row\">{}</th><td class=\"mono\">{}</td><td class=\"state yes\">✓ yes</td><td class=\"state no\">not built yet</td></tr>\n", esc(&p.name), esc(&p.id)))
+        .map(|p| {
+            let prov = match (&p.pinned, p.has_upstream) {
+                (Some(c), _) => format!("<td class=\"state yes\">✓ {}</td>", esc(&c[..7.min(c.len())])),
+                (None, false) => "<td class=\"state no\">not needed</td>".to_string(),
+                (None, true) => format!("<td class=\"state no\"><a href=\"/provision?plugin={0}\">not yet</a></td>", esc(&p.name)),
+            };
+            format!("<tr><th scope=\"row\">{}</th><td class=\"mono\">{}</td><td class=\"state yes\">✓ yes</td>{prov}<td class=\"state no\">not built yet</td></tr>\n", esc(&p.name), esc(&p.id))
+        })
         .collect();
     let table = if rows.is_empty() {
         "<p>No plugins have been minted yet.</p>".to_string()
     } else {
-        format!("<table class=\"plugins-table\"><caption class=\"visually-hidden\">Minted plugins</caption><thead><tr><th scope=\"col\">Plugin</th><th scope=\"col\">ID</th><th scope=\"col\">Minted</th><th scope=\"col\">Later steps</th></tr></thead><tbody>\n{rows}</tbody></table>")
+        format!("<table class=\"plugins-table\"><caption class=\"visually-hidden\">Minted plugins</caption><thead><tr><th scope=\"col\">Plugin</th><th scope=\"col\">ID</th><th scope=\"col\">Minted</th><th scope=\"col\">Provisioned</th><th scope=\"col\">Configure, Harness</th></tr></thead><tbody>\n{rows}</tbody></table>")
     };
     let body = format!("<p class=\"lede\">A plugin changes how certain blocks in a BerryWiki page are shown. Every plugin goes through the same four steps, in this order, and every step shows you exactly what it will change before it changes anything.</p>\n{table}\n<div class=\"actions\"><a class=\"btn\" href=\"/mint\">Mint a new plugin</a></div>");
     Response::html(frame(app, "Plugins", "Plugins", None, None, &body))
@@ -277,7 +381,13 @@ fn mint_request(form: &BTreeMap<String, String>) -> MintRequest {
 }
 
 /// A labelled text field, marked invalid with its message when it has an error.
-fn text_field(id: &str, label: &str, value: &str, hint: &str, errors: &[FieldError]) -> String {
+pub(crate) fn text_field(
+    id: &str,
+    label: &str,
+    value: &str,
+    hint: &str,
+    errors: &[FieldError],
+) -> String {
     let err = errors.iter().find(|e| e.field == id);
     let (invalid, described, msg) = match err {
         Some(e) => (
@@ -360,7 +470,7 @@ fn preview_block(p: &Plan) -> String {
 }
 
 /// An error banner that links each problem to its field.
-fn error_banner(heading: &str, errors: &[FieldError], extra: &str) -> String {
+pub(crate) fn error_banner(heading: &str, errors: &[FieldError], extra: &str) -> String {
     let items: String = errors
         .iter()
         .map(|e| {
@@ -381,13 +491,17 @@ fn error_banner(heading: &str, errors: &[FieldError], extra: &str) -> String {
 }
 
 /// The visible label of a form field, for error links.
-fn field_label(field: &str) -> String {
+pub(crate) fn field_label(field: &str) -> String {
     match field {
         "name" => "Short name",
         "display" => "Display name",
         "claims" => "What it claims in a page",
         "run_key" => "What groups blocks together",
         "licence" => "Licence",
+        "repo" => "Upstream repository",
+        "commit" => "Commit",
+        "files" => "Files it needs",
+        "plugin" => "Plugin",
         other => other,
     }
     .to_string()
@@ -427,7 +541,7 @@ fn mint_preview(app: &App, form: &BTreeMap<String, String>) -> Response {
                 "Mint a plugin",
                 "Step 1 of 4 · Mint",
                 Some(0),
-                Some(&r),
+                mint_card(&r).as_ref(),
                 &body,
             ))
         }
@@ -444,7 +558,7 @@ fn mint_preview(app: &App, form: &BTreeMap<String, String>) -> Response {
                     "Mint a plugin",
                     "Step 1 of 4 · Mint",
                     Some(0),
-                    Some(&r),
+                    mint_card(&r).as_ref(),
                     &body,
                 ),
             )
@@ -472,7 +586,7 @@ fn mint_post(app: &App, form: &BTreeMap<String, String>) -> Response {
                     "Mint a plugin",
                     "Step 1 of 4 · Mint",
                     Some(0),
-                    Some(&r),
+                    mint_card(&r).as_ref(),
                     &body,
                 ),
             )
@@ -501,7 +615,7 @@ fn mint_failed(app: &App, r: &MintRequest, e: &MintError) -> Response {
             "Mint a plugin",
             "Step 1 of 4 · Mint",
             Some(0),
-            Some(r),
+            mint_card(r).as_ref(),
             &body,
         ),
     )
@@ -578,7 +692,10 @@ pub fn handle(app: &App, req: &Request) -> Response {
         ("POST", "/mint/preview") => mint_preview(app, &req.form),
         ("POST", "/mint") => mint_post(app, &req.form),
         ("GET", "/mint/done") => mint_done(app, &req.query),
-        ("GET", "/provision") => not_built(app, 1),
+        ("GET", "/provision") => provision::get(app, &req.query),
+        ("POST", "/provision/preview") => provision::preview(app, &req.form),
+        ("POST", "/provision") => provision::post(app, &req.form),
+        ("GET", "/provision/done") => provision::done(app, &req.query),
         ("GET", "/configure") => not_built(app, 2),
         ("GET", "/harness") => not_built(app, 3),
         _ => Response::status(

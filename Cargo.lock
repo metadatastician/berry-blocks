@@ -35,10 +35,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "berry-blocks-provision"
+version = "0.1.0"
+dependencies = [
+ "sha2",
+]
+
+[[package]]
 name = "berry-blocks-wizard"
 version = "0.1.0"
 dependencies = [
  "berry-blocks-mint",
+ "berry-blocks-provision",
 ]
 
 [[package]]

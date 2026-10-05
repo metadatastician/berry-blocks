@@ -5,6 +5,8 @@
 
 ### Added
 
+- Wizard step 2, **Provision** (`berry-blocks-provision`): fetches an upstream commit by SHA into `vendor/.cache/` and checks it exists, its licence is MPL-2.0-compatible (otherwise refused), and the needed files are present. The preview shows the checks and the diffs to `pins.kyaml` and the manifest. Apply is digest-gated and checks the commit out into `vendor/<plugin>/`. `pins.kyaml` is read and written by a strict reader that round-trips the file exactly. `scripts/fetch-pins.sh` now fetches every pin. Verified against GitHub: ProgBlocks was provisioned at `ee10c66` in a scratch copy, and the lab passed all tests and browser checks on that pin.
+
 - The plugin wizard, `berry-blocks wizard`: Mint is built. `berry-blocks-mint` plans (preview) and applies a mint, with a SHA-256 digest tying the two together. It refuses stale previews and never overwrites a file. Plugin IDs are UUID v8 profile C. `berry-blocks-wizard` serves the approved screens with no script, a strict CSP, loopback-only binding and a cross-site post refusal. `tools/e2e-mint.sh` mints through the running wizard in CI and runs fmt, clippy and the conformance test on the generated crate.
 
 - Plugin wizard look and feel: a clickable, script-free prototype of mint, provision, configure and harness (14 screens, axe-clean in light and dark), generated from one frame (`design/wizard/`), and the screen pattern it defines (`design/wizard/PATTERN.adoc`).
