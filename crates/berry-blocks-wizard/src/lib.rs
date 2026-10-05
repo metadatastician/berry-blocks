@@ -19,6 +19,7 @@ use std::path::PathBuf;
 use std::time::Duration;
 
 mod configure;
+mod harness;
 mod provision;
 
 use berry_blocks_mint::{
@@ -265,7 +266,7 @@ fn rail(app: &App, current: Option<usize>) -> String {
         .enumerate()
         .map(|(i, (verb, what, href))| {
             let cur = if Some(i) == current { " aria-current=\"step\"" } else { "" };
-            let state = if Some(i) == current { "current step" } else if i <= 2 { "available" } else { "not built yet" };
+            let state = if Some(i) == current { "current step" } else { "available" };
             format!("<li><a href=\"{href}\"{cur}><span class=\"n\" aria-hidden=\"true\">{n}</span><span><span class=\"verb\">{verb}</span><span class=\"what\">{what}</span><span class=\"visually-hidden\">, {state}</span></span></a></li>\n", n = i + 1)
         })
         .collect();
@@ -644,20 +645,6 @@ fn mint_done(app: &App, q: &BTreeMap<String, String>) -> Response {
     ))
 }
 
-/// A step that is not built yet, said plainly in the same frame.
-fn not_built(app: &App, step: usize) -> Response {
-    let (verb, what, _) = STEPS[step];
-    let body = format!("<div class=\"draft-banner\" role=\"status\"><h2>{verb} is not built yet</h2><p>This step will {w}. Its screens are designed (see <span class=\"mono\">design/wizard/site/</span>) but not implemented; nothing here can change anything.</p></div>\n<div class=\"actions\"><a class=\"btn secondary\" href=\"/\">Back to plugins</a></div>", w = what.to_lowercase());
-    Response::html(frame(
-        app,
-        verb,
-        &format!("Step {} of 4 · {verb}", step + 1),
-        Some(step),
-        None,
-        &body,
-    ))
-}
-
 /// Refuses requests that do not name this server, and cross-site form posts.
 fn origin_problem(app: &App, req: &Request) -> Option<&'static str> {
     let host = req.headers.get("host").map(String::as_str).unwrap_or("");
@@ -705,7 +692,9 @@ pub fn handle(app: &App, req: &Request) -> Response {
         ("POST", "/configure/preview") => configure::preview(app, &req.form),
         ("POST", "/configure") => configure::post(app, &req.form),
         ("GET", "/configure/done") => configure::done(app, &req.query),
-        ("GET", "/harness") => not_built(app, 3),
+        ("GET", "/harness") => harness::get(app, &req.query),
+        ("POST", "/harness/run") => harness::post(app, &req.form),
+        ("GET", "/harness/results") => harness::results(app, &req.query),
         _ => Response::status(
             404,
             frame(

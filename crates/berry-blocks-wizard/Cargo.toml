@@ -13,6 +13,7 @@ berry-blocks-mint = { path = "../berry-blocks-mint" }
 berry-blocks-provision = { path = "../berry-blocks-provision" }
 berry-blocks-configure = { path = "../berry-blocks-configure" }
 berry-blocks-registry = { path = "../berry-blocks-registry" }
+berry-blocks-harness = { path = "../berry-blocks-harness" }
 
 [lints]
 workspace = true

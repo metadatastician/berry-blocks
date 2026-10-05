@@ -85,7 +85,18 @@ as `wikis/<name>.kyaml`. The preview renders every page of the wiki to report
 which pages would change. Render a configuration with
 `berry-blocks render --config wikis/<name>.kyaml OUT`. Plugins are listed in
 `crates/berry-blocks-registry`; Mint adds each new plugin there, and that edit
-appears in Mint's preview. Harness is designed but not built yet.
+appears in Mint's preview.
+
+**Harness** is built. It runs eight checks against a configured wiki:
+BerryWiki conformance, escaping of hostile fences built for each plugin's own
+claim key, no script in the static profile, pins agree, axe in light and dark,
+readable without script, and every `<prog-block>` upgrades. It writes
+`reports/<config>-<date>.kyaml`, and the results page reads that file back. A
+check that cannot run, for example with no Chromium (set `CHROMIUM_PATH`), is
+recorded as **not run**, never as passed. Each check is proven able to fail by
+a planted bad plugin in its tests.
+
+All four steps of the wizard are now built.
 
 ## Documents
 

@@ -49,7 +49,7 @@ Each step lands as its own working increment.
 | 2 | *Mint*: scaffold a new block crate and manifest from a form | *Built* (`berry-blocks-mint`, `berry-blocks wizard`). Its manifests pass `deed_lint`, and generated crates pass fmt, clippy and conformance (`tools/e2e-mint.sh`)
 | 3 | *Provision*: fetch a plugin at a pinned commit | *Built* (`berry-blocks-provision`). Checks the commit exists, the licence is compatible and the files are present; `pins.kyaml` holds any number of pins
 | 4 | *Configure*: per-wiki choice of plugins and profile | *Built* (`berry-blocks-configure`, `berry-blocks-registry`). `wikis/<name>.kyaml` is read by `render --config`
-| 5 | *Harness*: run a plugin against a wiki and report | the conformance, escaping and browser checks this repo already runs, packaged per plugin
+| 5 | *Harness*: run a plugin against a wiki and report | *Built* (`berry-blocks-harness`). 8 checks, pass/fail/not-run, reports in `reports/`; each check proven to fail on a planted bad plugin
 |===
 
 The wizard is server-rendered HTML forms with no script, the same way

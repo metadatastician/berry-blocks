@@ -9,6 +9,8 @@ members = [
     "crates/berry-blocks-provision",
     "crates/berry-blocks-configure",
     "crates/berry-blocks-wizard",
+    "crates/berry-blocks-harness",
+    "crates/berry-blocks-site",
     "crates/berry-blocks-cli",
 ]
 
