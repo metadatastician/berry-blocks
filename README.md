@@ -57,6 +57,22 @@ bun install && CHROMIUM_PATH=/path/to/chrome bun tools/check-pages.mjs out/stati
 Open `_pages.html` for the page list. Serve `out/enhanced` over HTTP to see the tabs; browsers do not run module
 scripts from `file://`.
 
+## The plugin wizard
+
+```sh
+cargo run -p berry-blocks -- wizard          # http://127.0.0.1:23880/
+```
+
+Server-rendered screens with no script, following
+[the screen pattern](design/wizard/PATTERN.adoc). **Mint** is built: it previews
+exactly the files it would create (manifest, crate, conformance test,
+workspace entry), and Mint plugin writes those files and nothing else. A
+digest ties the two together, so if the form or the repository changes after
+the preview, minting is refused and nothing is written. A minted plugin builds
+and passes the repo's gates as generated; `tools/e2e-mint.sh` proves this on
+every CI run. Provision, Configure and Harness are designed but not built yet,
+and their screens say so.
+
 ## Documents
 
 | Document | What it answers |

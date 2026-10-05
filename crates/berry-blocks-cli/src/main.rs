@@ -156,9 +156,50 @@ fn render(args: &Args) -> Result<usize, String> {
     Ok(pages.len())
 }
 
-/// Entry point: runs `render`, printing a one-line result or an error.
+/// Runs `berry-blocks wizard [--addr HOST:PORT] [--root DIR]` until stopped.
+fn wizard(raw: &[String]) -> ExitCode {
+    let mut addr = "127.0.0.1:23880".to_string();
+    let mut root = std::path::PathBuf::from(".");
+    let mut it = raw.iter().skip(1);
+    while let Some(arg) = it.next() {
+        match (arg.as_str(), it.next()) {
+            ("--addr", Some(v)) => addr = v.clone(),
+            ("--root", Some(v)) => root = v.into(),
+            _ => {
+                eprintln!("usage: berry-blocks wizard [--addr HOST:PORT] [--root DIR]");
+                return ExitCode::from(2);
+            }
+        }
+    }
+    let root = match root.canonicalize() {
+        Ok(r) if r.join("Cargo.toml").is_file() => r,
+        _ => {
+            eprintln!(
+                "berry-blocks: {} is not a berry-blocks checkout",
+                root.display()
+            );
+            return ExitCode::from(2);
+        }
+    };
+    println!(
+        "berry-blocks wizard on http://{addr}/ writing into {}",
+        root.display()
+    );
+    match berry_blocks_wizard::serve(&berry_blocks_wizard::App { root, addr }) {
+        Ok(()) => ExitCode::SUCCESS,
+        Err(e) => {
+            eprintln!("berry-blocks: {e}");
+            ExitCode::from(2)
+        }
+    }
+}
+
+/// Entry point: `render` or `wizard`.
 fn main() -> ExitCode {
     let raw: Vec<String> = std::env::args().skip(1).collect();
+    if raw.first().map(String::as_str) == Some("wizard") {
+        return wizard(&raw);
+    }
     match parse_args(&raw).and_then(|a| render(&a).map(|n| (n, a))) {
         Ok((n, a)) => {
             println!(

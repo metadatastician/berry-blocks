@@ -46,7 +46,7 @@ Each step lands as its own working increment.
 |===
 | Step | Wizard verb | What it needs first
 
-| 2 | *Mint*: scaffold a new block crate and manifest from a form | a template crate and a generator that emits a manifest which passes `deed_lint`
+| 2 | *Mint*: scaffold a new block crate and manifest from a form | *Built* (`berry-blocks-mint`, `berry-blocks wizard`). Its manifests pass `deed_lint`, and generated crates pass fmt, clippy and conformance (`tools/e2e-mint.sh`)
 | 3 | *Provision*: fetch a plugin at a pinned commit | `pins.kyaml` generalised from two fixed projects to a list of plugins
 | 4 | *Configure*: per-wiki choice of plugins and profile | a KYAML config file read by `berry-blocks render`
 | 5 | *Harness*: run a plugin against a wiki and report | the conformance, escaping and browser checks this repo already runs, packaged per plugin
