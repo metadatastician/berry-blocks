@@ -46,6 +46,12 @@
           name: "Format, lint and test",
           run: "cargo fmt --all -- --check && cargo clippy --workspace --all-targets -- -D warnings && cargo test --workspace",
         },
+        # Mint a plugin through the running wizard in a scratch copy, then hold
+        # the generated crate to fmt, clippy and its conformance test.
+        {
+          name: "Mint end to end through the wizard",
+          run: "cargo build -q -p berry-blocks && ./tools/e2e-mint.sh",
+        },
         {
           name: "Set up Bun",
           uses: "oven-sh/setup-bun@v2.2.0",
@@ -55,7 +61,7 @@
         },
         {
           name: "Render both profiles and check them in Chrome",
-          run: "bun install --frozen-lockfile && cargo run -q -p berry-blocks -- render --profile static fixtures/lab-wiki out/static && cargo run -q -p berry-blocks -- render --profile enhanced fixtures/lab-wiki out/enhanced && CHROMIUM_PATH=\"$(command -v google-chrome)\" bun tools/check-pages.mjs out/static out/enhanced",
+          run: "bun install --frozen-lockfile && cargo run -q -p berry-blocks -- render --profile static fixtures/lab-wiki out/static && cargo run -q -p berry-blocks -- render --config wikis/lab-wiki.kyaml out/enhanced && CHROMIUM_PATH=\"$(command -v google-chrome)\" bun tools/check-pages.mjs out/static out/enhanced",
         },
         {
           name: "JSON is JCS canonical",

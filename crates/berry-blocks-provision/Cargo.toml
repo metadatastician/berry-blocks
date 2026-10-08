@@ -1,0 +1,15 @@
+# SPDX-License-Identifier: MPL-2.0
+[package]
+name = "berry-blocks-provision"
+description = "Provision a berry-blocks plugin: verify an upstream commit (exists, licence, files) and pin it, preview-gated."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[dependencies]
+sha2 = "0.10"
+
+[lints]
+workspace = true

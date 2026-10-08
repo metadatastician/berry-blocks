@@ -57,6 +57,47 @@ bun install && CHROMIUM_PATH=/path/to/chrome bun tools/check-pages.mjs out/stati
 Open `_pages.html` for the page list. Serve `out/enhanced` over HTTP to see the tabs; browsers do not run module
 scripts from `file://`.
 
+## The plugin wizard
+
+```sh
+cargo run -p berry-blocks -- wizard          # http://127.0.0.1:23880/
+```
+
+Server-rendered screens with no script, following
+[the screen pattern](design/wizard/PATTERN.adoc). **Mint** is built: it previews
+exactly the files it would create (manifest, crate, conformance test,
+workspace entry), and Mint plugin writes those files and nothing else. A
+digest ties the two together, so if the form or the repository changes after
+the preview, minting is refused and nothing is written. A minted plugin builds
+and passes the repo's gates as generated; `tools/e2e-mint.sh` proves this on
+every CI run.
+
+**Provision** is built too. It pins a plugin's upstream code to one exact
+commit, after checking that the commit exists (a branch or tag name is refused),
+that its licence is compatible with MPL-2.0, and that every file the plugin
+needs is there. The preview shows the check results and the exact changes to
+`pins.kyaml` and the plugin's manifest. A plugin whose code lives in
+berry-blocks is shown as "not needed".
+
+**Configure** is built. It turns registered plugins on for one wiki, sets
+their options, and chooses the static or enhanced profile. It saves the result
+as `wikis/<name>.kyaml`. The preview renders every page of the wiki to report
+which pages would change. Render a configuration with
+`berry-blocks render --config wikis/<name>.kyaml OUT`. Plugins are listed in
+`crates/berry-blocks-registry`; Mint adds each new plugin there, and that edit
+appears in Mint's preview.
+
+**Harness** is built. It runs eight checks against a configured wiki:
+BerryWiki conformance, escaping of hostile fences built for each plugin's own
+claim key, no script in the static profile, pins agree, axe in light and dark,
+readable without script, and every `<prog-block>` upgrades. It writes
+`reports/<config>-<date>.kyaml`, and the results page reads that file back. A
+check that cannot run, for example with no Chromium (set `CHROMIUM_PATH`), is
+recorded as **not run**, never as passed. Each check is proven able to fail by
+a planted bad plugin in its tests.
+
+All four steps of the wizard are now built.
+
 ## Documents
 
 | Document | What it answers |

@@ -1,0 +1,19 @@
+# SPDX-License-Identifier: MPL-2.0
+[package]
+name = "berry-blocks-wizard"
+description = "The berry-blocks plugin wizard: server-rendered, script-free screens for mint, provision, configure and harness."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[dependencies]
+berry-blocks-mint = { path = "../berry-blocks-mint" }
+berry-blocks-provision = { path = "../berry-blocks-provision" }
+berry-blocks-configure = { path = "../berry-blocks-configure" }
+berry-blocks-registry = { path = "../berry-blocks-registry" }
+berry-blocks-harness = { path = "../berry-blocks-harness" }
+
+[lints]
+workspace = true
