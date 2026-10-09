@@ -195,6 +195,9 @@ pub(crate) struct Card {
 }
 
 /// Lists minted plugins by reading their manifests and `pins.kyaml`.
+/// Sorts by plugin name. An unreadable plugins directory yields an empty list;
+/// unreadable entries or manifests are skipped. Unreadable or malformed pins
+/// leave every plugin's pinned commit unset.
 pub(crate) fn installed(app: &App) -> Vec<Installed> {
     let pins = fs::read_to_string(app.root.join("pins.kyaml"))
         .ok()
@@ -567,7 +570,9 @@ fn mint_preview(app: &App, form: &BTreeMap<String, String>) -> Response {
     }
 }
 
-/// POST /mint: apply the previewed plan, or refuse without writing.
+/// POST /mint: apply the previewed plan and redirect to the done page on success.
+/// Returns 422 for invalid fields, 409 for stale previews or existing targets,
+/// and 500 for I/O failures, which may leave partial writes.
 fn mint_post(app: &App, form: &BTreeMap<String, String>) -> Response {
     let r = mint_request(form);
     let digest = form.get("digest").map(String::as_str).unwrap_or("");
@@ -675,7 +680,8 @@ fn origin_problem(app: &App, req: &Request) -> Option<&'static str> {
     None
 }
 
-/// Routes one request. Pure: no socket, so every route is unit-testable.
+/// Routes one request without handling the HTTP connection.
+/// Routes may read or write repository files and fetch upstream commits.
 pub fn handle(app: &App, req: &Request) -> Response {
     if let Some(why) = origin_problem(app, req) {
         return Response::status(403, format!("<!doctype html><html lang=\"en\"><head><meta charset=\"utf-8\"><title>Refused</title></head><body><main><h1>Refused</h1><p>{}</p></main></body></html>", esc(why)));

@@ -107,6 +107,8 @@ fn preview_block(p: &Plan) -> String {
 }
 
 /// Marks lines removed and added between two versions of a small file.
+/// Returns escaped HTML with removed lines before the new contents. Line order
+/// and duplicate counts are ignored when deciding whether a line changed.
 fn diff(before: &str, after: &str) -> String {
     let b: Vec<&str> = before.lines().collect();
     let a: Vec<&str> = after.lines().collect();
@@ -214,7 +216,10 @@ pub(crate) fn preview(app: &App, f: &BTreeMap<String, String>) -> Response {
     }
 }
 
-/// POST /provision: apply the previewed plan, or refuse without changing anything.
+/// POST /provision: apply the previewed plan and redirect to the done page on success.
+/// Returns 422 for invalid fields or failed checks, 409 for a stale preview, and
+/// 500 for I/O or Git failures. Applying refetches into the cache; write or checkout
+/// failures may leave partial changes.
 pub(crate) fn post(app: &App, f: &BTreeMap<String, String>) -> Response {
     let r = request(f);
     let digest = f.get("digest").map(String::as_str).unwrap_or("");
