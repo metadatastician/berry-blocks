@@ -287,6 +287,7 @@ pub fn validate(req: &ProvisionRequest, root: &Path) -> Vec<FieldError> {
             || f.split('/').any(|c| c == ".." || c.is_empty())
             || f.contains('"')
             || f.contains('\\')
+            || f.contains(')')
     }) {
         errs.push(FieldError {
             field: "files",
