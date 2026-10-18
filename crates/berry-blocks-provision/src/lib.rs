@@ -54,6 +54,9 @@ pub struct Pins {
 
 impl Pins {
     /// Reads the exact KYAML shape this repo uses; refuses anything else.
+    /// Preserves leading comments and pin order; trailing blank lines are allowed.
+    /// Returns an error for malformed structure or quoted fields. Pin names,
+    /// repository URLs, and commit IDs are not validated here.
     pub fn parse(text: &str) -> Result<Self, String> {
         let mut lines = text.lines().peekable();
         let mut header = Vec::new();
@@ -96,6 +99,8 @@ impl Pins {
     }
 
     /// Writes the file in the same shape `parse` reads.
+    /// Values are emitted verbatim without validation or escaping; callers must
+    /// supply names and field values that fit that shape.
     pub fn render(&self) -> String {
         let mut out = String::new();
         for h in &self.header {
@@ -239,9 +244,33 @@ pub fn parse_files(s: &str) -> Vec<String> {
 }
 
 /// Checks every field; returns all problems at once.
+///
+/// Requires a plugin manifest under the lab repository `root`. Plugin names must
+/// start with an ASCII lowercase letter, contain only ASCII lowercase letters,
+/// digits, or hyphens, and be at most 40 characters, with no trailing or consecutive
+/// hyphens. Repository URLs must start with `https://` or `file:///` and contain no
+/// whitespace, double quotes, or backslashes; commits must be 40 lowercase hex digits.
+/// At least one relative upstream path is required; empty or `..` path components,
+/// double quotes, backslashes, and closing parentheses are rejected.
+///
+/// Returns at most one problem per field, or an empty list if all checks pass.
+/// Manifest metadata errors become plugin field errors. Does not fetch or verify
+/// the upstream commit or files.
 pub fn validate(req: &ProvisionRequest, root: &Path) -> Vec<FieldError> {
     let mut errs = Vec::new();
-    if !manifest_path(root, &req.plugin).is_file() {
+    let name_ok = req
+        .plugin
+        .chars()
+        .next()
+        .is_some_and(|c| c.is_ascii_lowercase())
+        && req.plugin.len() <= 40
+        && req
+            .plugin
+            .chars()
+            .all(|c| c.is_ascii_lowercase() || c.is_ascii_digit() || c == '-')
+        && !req.plugin.ends_with('-')
+        && !req.plugin.contains("--");
+    if !name_ok || !manifest_path(root, &req.plugin).is_file() {
         errs.push(FieldError {
             field: "plugin",
             message: format!("No minted plugin called {}. Mint it first.", req.plugin),
@@ -287,6 +316,7 @@ pub fn validate(req: &ProvisionRequest, root: &Path) -> Vec<FieldError> {
             || f.split('/').any(|c| c == ".." || c.is_empty())
             || f.contains('"')
             || f.contains('\\')
+            || f.contains(')')
     }) {
         errs.push(FieldError {
             field: "files",
@@ -317,7 +347,9 @@ fn git(args: &[&str]) -> Result<Vec<u8>, String> {
     }
 }
 
-/// Recognises a licence from its text; returns the SPDX identifier.
+/// Recognizes a license by text fragments after normalizing whitespace.
+/// Returns an SPDX identifier, the generic label `GPL`, or `None` if unrecognized.
+/// Recognition alone does not imply compatibility; see [`COMPATIBLE`].
 pub fn detect_licence(text: &str) -> Option<&'static str> {
     let t: String = text.split_whitespace().collect::<Vec<_>>().join(" ");
     if t.contains("Mozilla Public License Version 2.0")
@@ -346,6 +378,8 @@ pub fn detect_licence(text: &str) -> Option<&'static str> {
 }
 
 /// The plugin's manifest with its `(upstream …)` clause replaced or added.
+/// Preserves the existing `:interface` value when found. Returns an error if
+/// the existing clause is unbalanced or the remaining manifest has no closing form.
 fn manifest_with_upstream(manifest: &str, req: &ProvisionRequest) -> Result<String, String> {
     let interface = manifest
         .find("(upstream")
@@ -406,6 +440,8 @@ fn last_top_level_close(text: &str) -> Option<usize> {
 }
 
 /// Removes the clause starting with `head` (and the whitespace before it).
+/// Uses the first literal match; returns the text unchanged if absent, or an
+/// error if the matched clause has no matching closing parenthesis.
 fn remove_clause(text: &str, head: &str) -> Result<String, String> {
     let Some(start) = text.find(head) else {
         return Ok(text.to_string());
@@ -427,7 +463,11 @@ fn cache_dir(root: &Path, plugin: &str) -> PathBuf {
         .join(format!("{plugin}.git"))
 }
 
-/// Fetches the commit into the cache and runs every check.
+/// Fetches into `vendor/.cache/<plugin>.git` under `root` and checks the commit,
+/// license, and requested paths. Returns checks, the subject, and total bytes.
+/// A fetch failure or commit mismatch returns one failed check, an empty subject,
+/// and zero bytes. Subject lookup failures yield an empty subject; paths whose
+/// sizes cannot be read are reported as missing. Unparseable sizes contribute zero.
 fn run_checks(root: &Path, req: &ProvisionRequest) -> (Vec<Check>, String, u64) {
     let cache = cache_dir(root, &req.plugin);
     let cache_s = cache.to_string_lossy().to_string();
@@ -558,6 +598,14 @@ fn run_checks(root: &Path, req: &ProvisionRequest) -> (Vec<Check>, String, u64) 
 
 /// Computes what provisioning would do. Fetches into the cache only; the
 /// repository's own files are not changed.
+/// `root` is the lab repository root. The returned plan includes changed
+/// file contents, check results, and a digest for [`apply`]. Fetch, license, and
+/// missing-file failures are returned as failed checks in an `Ok` plan.
+///
+/// # Errors
+/// Returns [`ProvisionError::Invalid`] for invalid fields before fetching, or
+/// [`ProvisionError::Failed`] if reading or parsing the pins or preparing the
+/// manifest fails.
 pub fn plan(req: &ProvisionRequest, root: &Path) -> Result<Plan, ProvisionError> {
     let errs = validate(req, root);
     if !errs.is_empty() {
@@ -626,6 +674,18 @@ pub fn plan(req: &ProvisionRequest, root: &Path) -> Result<Plan, ProvisionError>
 }
 
 /// Writes the plan, if and only if it matches the preview and every check passed.
+/// Recomputes [`plan`] under the lab repository `root`, including its cache fetch,
+/// and compares it with `previewed_digest` from the previewed plan. Writes the
+/// changed pins and manifest, then replaces `vendor/<plugin>/` with a checkout
+/// of the requested commit. Returns the applied plan.
+///
+/// # Errors
+/// Propagates errors from [`plan`]. Returns [`ProvisionError::Stale`] on a digest
+/// mismatch, or [`ProvisionError::ChecksFailed`] if the matching plan fails checks.
+/// These refusals can update the cache but do not write the plan or checkout.
+/// Write and checkout errors return [`ProvisionError::Failed`] with the repository
+/// files already written. Changes are not rolled back: temporary files or a
+/// partially replaced vendor checkout may remain.
 pub fn apply(
     req: &ProvisionRequest,
     root: &Path,
