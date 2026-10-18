@@ -27,6 +27,9 @@ use berry_blocks_host::{escape_html, Asset, Block, Fence, FenceRun, Profile};
 pub struct ProgBlocks {
     /// Page-relative URL of ProgBlocks' module, used by the enhanced profile.
     pub module_url: String,
+    /// Remember each reader's variant choice for every grouped block, as if
+    /// each group's first fence said `persist` (a wiki-level option).
+    pub persist_by_default: bool,
 }
 
 impl Default for ProgBlocks {
@@ -34,6 +37,7 @@ impl Default for ProgBlocks {
     fn default() -> Self {
         Self {
             module_url: "progblocks/prog-block.js".into(),
+            persist_by_default: false,
         }
     }
 }
@@ -125,7 +129,9 @@ impl Block for ProgBlocks {
                 let mut attrs = format!(" label=\"{}\"", escape_html(label));
                 if let Some(group) = first.get("group") {
                     attrs.push_str(&format!(" group=\"{}\"", escape_html(group)));
-                    if run.fences.iter().any(|f| f.get("persist").is_some()) {
+                    if self.persist_by_default
+                        || run.fences.iter().any(|f| f.get("persist").is_some())
+                    {
                         attrs.push_str(" persist");
                     }
                 }
@@ -205,6 +211,25 @@ mod tests {
             r.assets,
             vec![Asset::ModuleScript("progblocks/prog-block.js".into())]
         );
+    }
+
+    #[test]
+    /// The wiki-level option adds `persist` to grouped blocks only.
+    fn persist_by_default_marks_grouped_blocks() {
+        let block = ProgBlocks {
+            persist_by_default: true,
+            ..Default::default()
+        };
+        let grouped = render_page(
+            "```sh variant=a group=g\n1\n```\n",
+            &[&block],
+            Profile::Enhanced,
+        )
+        .unwrap();
+        assert!(grouped.html.contains(" persist"));
+        let ungrouped =
+            render_page("```sh variant=a\n1\n```\n", &[&block], Profile::Enhanced).unwrap();
+        assert!(!ungrouped.html.contains(" persist"));
     }
 
     #[test]

@@ -1,0 +1,15 @@
+# SPDX-License-Identifier: MPL-2.0
+[package]
+name = "berry-blocks-site"
+description = "Write a rendered wiki as static HTML pages; shared by render and Harness."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[dependencies]
+berry-blocks-host = { path = "../berry-blocks-host" }
+
+[lints]
+workspace = true

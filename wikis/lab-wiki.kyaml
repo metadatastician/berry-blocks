@@ -1,0 +1,15 @@
+# SPDX-License-Identifier: MPL-2.0
+# berry-blocks wiki configuration, written by the wizard's Configure step.
+# Rendered with: berry-blocks render --config <this file> OUT
+{
+  wiki: "fixtures/lab-wiki",
+  profile: "enhanced",
+  plugins: [
+    {
+      name: "progblocks",
+      options: {
+        persist: true,
+      },
+    },
+  ],
+}

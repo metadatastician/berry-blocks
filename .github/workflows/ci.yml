@@ -61,7 +61,7 @@
         },
         {
           name: "Render both profiles and check them in Chrome",
-          run: "bun install --frozen-lockfile && cargo run -q -p berry-blocks -- render --profile static fixtures/lab-wiki out/static && cargo run -q -p berry-blocks -- render --profile enhanced fixtures/lab-wiki out/enhanced && CHROMIUM_PATH=\"$(command -v google-chrome)\" bun tools/check-pages.mjs out/static out/enhanced",
+          run: "bun install --frozen-lockfile && cargo run -q -p berry-blocks -- render --profile static fixtures/lab-wiki out/static && cargo run -q -p berry-blocks -- render --config wikis/lab-wiki.kyaml out/enhanced && CHROMIUM_PATH=\"$(command -v google-chrome)\" bun tools/check-pages.mjs out/static out/enhanced",
         },
         {
           name: "JSON is JCS canonical",

@@ -304,6 +304,36 @@ fn workspace_with_member(cargo_toml: &str, crate_name: &str) -> Option<String> {
     Some(cargo_toml.replacen(anchor, &format!("{line}{anchor}"), 1))
 }
 
+/// The plugin's type name: `zebra-notes` becomes `ZebraNotes`.
+fn type_name(name: &str) -> String {
+    name.split('-')
+        .map(|w| {
+            let mut c = w.chars();
+            c.next()
+                .map(|f| f.to_ascii_uppercase().to_string() + c.as_str())
+                .unwrap_or_default()
+        })
+        .collect()
+}
+
+/// Inserts `insert` on the line before the line containing `marker`.
+fn insert_before_marker(text: &str, marker: &str, insert: &str) -> Option<String> {
+    if text.contains(insert) {
+        return None;
+    }
+    let at = text.find(marker)?;
+    let line_start = text[..at].rfind('\n').map_or(0, |i| i + 1);
+    Some(format!(
+        "{}{insert}{}",
+        &text[..line_start],
+        &text[line_start..]
+    ))
+}
+
+/// Paths of the registry files Mint edits.
+const REGISTRY_TOML: &str = "crates/berry-blocks-registry/Cargo.toml";
+const REGISTRY_LIB: &str = "crates/berry-blocks-registry/src/lib.rs";
+
 /// Computes what minting would do. Writes nothing.
 pub fn plan(req: &MintRequest, root: &Path) -> Result<Plan, MintError> {
     let errs = validate(req, root);
@@ -322,6 +352,36 @@ pub fn plan(req: &MintRequest, root: &Path) -> Result<Plan, MintError> {
             message: "The workspace Cargo.toml does not have the expected members list.".into(),
         }])
     })?;
+    let registry_err = |what: &str| {
+        MintError::Invalid(vec![FieldError {
+            field: "name",
+            message: format!(
+                "The registry's {what} is missing its Mint marker, or already lists this plugin."
+            ),
+        }])
+    };
+    let read = |p: &str| {
+        fs::read_to_string(root.join(p)).map_err(|e| MintError::Io {
+            written: vec![],
+            error: format!("{p}: {e}"),
+        })
+    };
+    let dep_line = format!("{crate_name} = {{ path = \"../{crate_name}\" }}\n");
+    let reg_toml = insert_before_marker(
+        &read(REGISTRY_TOML)?,
+        "# berry-blocks:mint-dependencies",
+        &dep_line,
+    )
+    .ok_or_else(|| registry_err("Cargo.toml"))?;
+    let entry = format!(
+        "        Entry {{\n            name: {name:?},\n            options: &[],\n            build: |_| Box::new({krate}::{ty}),\n        }},\n",
+        name = req.name,
+        krate = crate_name.replace('-', "_"),
+        ty = type_name(&req.name),
+    );
+    let reg_lib =
+        insert_before_marker(&read(REGISTRY_LIB)?, "// berry-blocks:mint-entries", &entry)
+            .ok_or_else(|| registry_err("list"))?;
     let changes = vec![
         Change {
             kind: ChangeKind::Create,
@@ -357,6 +417,20 @@ pub fn plan(req: &MintRequest, root: &Path) -> Result<Plan, MintError> {
             note: "adds the crate to the workspace",
             content: new_workspace,
             added_lines: vec![format!("    \"crates/{crate_name}\",")],
+        },
+        Change {
+            kind: ChangeKind::Modify,
+            path: REGISTRY_TOML.into(),
+            note: "lets the registry build the plugin",
+            content: reg_toml,
+            added_lines: vec![dep_line.trim_end().to_string()],
+        },
+        Change {
+            kind: ChangeKind::Modify,
+            path: REGISTRY_LIB.into(),
+            note: "registers the plugin so a wiki configuration can turn it on",
+            content: reg_lib,
+            added_lines: entry.lines().map(str::to_string).collect(),
         },
     ];
     let mut h = Sha256::new();
@@ -437,6 +511,17 @@ mod tests {
         ));
         fs::create_dir_all(&dir).unwrap();
         fs::write(dir.join("Cargo.toml"), "[workspace]\nmembers = [\n    \"crates/berry-blocks-host\",\n    \"crates/berry-blocks-cli\",\n]\n").unwrap();
+        fs::create_dir_all(dir.join("crates/berry-blocks-registry/src")).unwrap();
+        fs::write(
+            dir.join(REGISTRY_TOML),
+            "[dependencies]\n# berry-blocks:mint-dependencies\n",
+        )
+        .unwrap();
+        fs::write(
+            dir.join(REGISTRY_LIB),
+            "    vec![\n        // berry-blocks:mint-entries\n    ]\n",
+        )
+        .unwrap();
         dir
     }
 
@@ -493,7 +578,7 @@ mod tests {
         let dir = scratch();
         let before = fs::read_to_string(dir.join("Cargo.toml")).unwrap();
         let p = plan(&req(), &dir).unwrap();
-        assert_eq!(p.changes.len(), 5);
+        assert_eq!(p.changes.len(), 7);
         assert_eq!(fs::read_to_string(dir.join("Cargo.toml")).unwrap(), before);
         assert!(!dir.join("plugins").exists());
         apply(&req(), &dir, &p.digest).unwrap();

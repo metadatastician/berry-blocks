@@ -1,0 +1,17 @@
+# SPDX-License-Identifier: MPL-2.0
+[package]
+name = "berry-blocks-configure"
+description = "Configure a wiki: which plugins, which profile; writes wikis/<name>.kyaml, preview-gated."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[dependencies]
+berry-blocks-host = { path = "../berry-blocks-host" }
+berry-blocks-registry = { path = "../berry-blocks-registry" }
+sha2 = "0.10"
+
+[lints]
+workspace = true

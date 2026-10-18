@@ -18,5 +18,6 @@
     :enhanced-assets ("progblocks/prog-block.js"))
   (upstream
     :repo "https://github.com/metadatastician/progblocks"
-    :commit "ccb412289d736abc6aea5609ed50bb53d90e9388"
+    :commit "ee10c66dda909c808f1367cb8967ad7087752fee"
+    :files ("src/prog-block.js" "src/prog-block.css")
     :interface "<prog-block> with <template data-variant> children"))

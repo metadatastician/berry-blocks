@@ -12,6 +12,8 @@ repository.workspace = true
 berry-blocks-host = { path = "../berry-blocks-host" }
 berry-blocks-progblocks = { path = "../berry-blocks-progblocks" }
 berry-blocks-wizard = { path = "../berry-blocks-wizard" }
+berry-blocks-configure = { path = "../berry-blocks-configure" }
+berry-blocks-site = { path = "../berry-blocks-site" }
 
 [lints]
 workspace = true

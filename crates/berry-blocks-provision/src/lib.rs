@@ -246,9 +246,16 @@ pub fn parse_files(s: &str) -> Vec<String> {
 /// Checks every field; returns all problems at once.
 pub fn validate(req: &ProvisionRequest, root: &Path) -> Vec<FieldError> {
     let mut errs = Vec::new();
-    let name_ok = req.plugin.chars().next().is_some_and(|c| c.is_ascii_lowercase())
+    let name_ok = req
+        .plugin
+        .chars()
+        .next()
+        .is_some_and(|c| c.is_ascii_lowercase())
         && req.plugin.len() <= 40
-        && req.plugin.chars().all(|c| c.is_ascii_lowercase() || c.is_ascii_digit() || c == '-')
+        && req
+            .plugin
+            .chars()
+            .all(|c| c.is_ascii_lowercase() || c.is_ascii_digit() || c == '-')
         && !req.plugin.ends_with('-')
         && !req.plugin.contains("--");
     if !name_ok || !manifest_path(root, &req.plugin).is_file() {

@@ -48,6 +48,8 @@ CODE=$(post "${FORM}&digest=${DIGEST}" /mint -o /dev/null -w '%{http_code}')
 cd "$SCRATCH"
 CRATE="berry-blocks-${NAME}"
 cargo fmt --check -p "$CRATE"
-CARGO_TARGET_DIR="$ROOT/target" cargo clippy -q -p "$CRATE" --all-targets -- -D warnings
-CARGO_TARGET_DIR="$ROOT/target" cargo test -q -p "$CRATE"
-echo "e2e-mint: minted ${NAME} through the wizard; the generated crate passes fmt, clippy and its conformance test"
+cargo fmt --check -p berry-blocks-registry
+CARGO_TARGET_DIR="$ROOT/target" cargo clippy -q -p "$CRATE" -p berry-blocks-registry --all-targets -- -D warnings
+CARGO_TARGET_DIR="$ROOT/target" cargo test -q -p "$CRATE" -p berry-blocks-registry
+grep -q "name: \"${NAME}\"" crates/berry-blocks-registry/src/lib.rs || { echo "e2e-mint: the plugin was not registered" >&2; exit 1; }
+echo "e2e-mint: minted ${NAME} through the wizard; the generated crate and the registry pass fmt, clippy and their tests"
