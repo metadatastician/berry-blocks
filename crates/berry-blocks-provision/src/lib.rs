@@ -244,6 +244,18 @@ pub fn parse_files(s: &str) -> Vec<String> {
 }
 
 /// Checks every field; returns all problems at once.
+///
+/// Requires a plugin manifest under the lab repository `root`. Plugin names must
+/// start with an ASCII lowercase letter, contain only ASCII lowercase letters,
+/// digits, or hyphens, and be at most 40 characters, with no trailing or consecutive
+/// hyphens. Repository URLs must start with `https://` or `file:///` and contain no
+/// whitespace, double quotes, or backslashes; commits must be 40 lowercase hex digits.
+/// At least one relative upstream path is required; empty or `..` path components,
+/// double quotes, backslashes, and closing parentheses are rejected.
+///
+/// Returns at most one problem per field, or an empty list if all checks pass.
+/// Manifest metadata errors become plugin field errors. Does not fetch or verify
+/// the upstream commit or files.
 pub fn validate(req: &ProvisionRequest, root: &Path) -> Vec<FieldError> {
     let mut errs = Vec::new();
     let name_ok = req
