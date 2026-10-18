@@ -3,6 +3,10 @@
 
 ## [Unreleased]
 
+### Fixed
+
+- Provisioning hardening, retained from the wizard work: a plugin name that breaks Mint's rule (uppercase, digits first, consecutive or trailing hyphens, over 40 characters, path separators) is refused on the plugin field before anything is fetched, and upstream file paths containing a closing parenthesis are refused alongside quotes, backslashes, `..` and absolute paths. The name rule now lives once, in `berry_blocks_mint::is_plugin_name`, and Provision shares it, so a name can never be mintable but not provisionable. Provision's documentation states its validation rules, error outcomes and partial-write behaviour accurately, in the lab's spelling.
+
 ### Added
 
 - Wizard step 4, **Harness** (`berry-blocks-harness`). It runs eight checks per configuration, with pass, fail or not-run outcomes, and saves a canonical KYAML report in `reports/`. Failing checks come with advice. `tools/harness-browser.mjs` runs the browser checks for any wiki. `berry-blocks-site` is extracted from the CLI so render and Harness write identical pages; the output was verified byte-identical before and after the extraction. All four wizard steps are built. Run from the wizard against `lab-wiki`, all 8 checks pass.

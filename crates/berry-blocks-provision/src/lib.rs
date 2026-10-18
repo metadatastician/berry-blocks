@@ -11,7 +11,9 @@
 //!   check passed, writes `pins.kyaml` and the plugin's manifest, and checks the
 //!   commit out into `vendor/<plugin>/` (gitignored).
 //!
-//! Checks, all before anything is written: the commit is a full SHA, the
+//! Checks, all before anything is written: the plugin name is one Mint would
+//! accept ([`berry_blocks_mint::is_plugin_name`] — the rule is defined where
+//! plugins are created and shared here), the commit is a full SHA, the
 //! repository URL is `https://` or `file://`, the commit exists, its licence is
 //! compatible with MPL-2.0 (owner ruling 2026-10-05: refuse otherwise), and
 //! every file the plugin needs exists at that commit.
@@ -21,6 +23,7 @@ use std::fs;
 use std::path::{Path, PathBuf};
 use std::process::Command;
 
+use berry_blocks_mint::is_plugin_name;
 use sha2::{Digest, Sha256};
 
 /// Licences compatible with the lab's MPL-2.0, as SPDX identifiers.
@@ -246,31 +249,20 @@ pub fn parse_files(s: &str) -> Vec<String> {
 /// Checks every field; returns all problems at once.
 ///
 /// Requires a plugin manifest under the lab repository `root`. Plugin names must
-/// start with an ASCII lowercase letter, contain only ASCII lowercase letters,
-/// digits, or hyphens, and be at most 40 characters, with no trailing or consecutive
-/// hyphens. Repository URLs must start with `https://` or `file:///` and contain no
-/// whitespace, double quotes, or backslashes; commits must be 40 lowercase hex digits.
-/// At least one relative upstream path is required; empty or `..` path components,
-/// double quotes, backslashes, and closing parentheses are rejected.
+/// satisfy the one rule Mint already enforces, [`berry_blocks_mint::is_plugin_name`]:
+/// 1 to 40 ASCII lowercase letters, digits and single hyphens, starting with a
+/// letter. Repository URLs must start with `https://` or `file:///` and contain
+/// no whitespace, double quotes, or backslashes; commits must be 40 lowercase
+/// hex digits. At least one relative upstream path is required; empty or `..`
+/// path components, double quotes, backslashes, and closing parentheses are
+/// rejected. A name that breaks the rule, or a name with no manifest, is
+/// reported on the plugin field. Does not fetch or verify the upstream commit
+/// or files.
 ///
 /// Returns at most one problem per field, or an empty list if all checks pass.
-/// Manifest metadata errors become plugin field errors. Does not fetch or verify
-/// the upstream commit or files.
 pub fn validate(req: &ProvisionRequest, root: &Path) -> Vec<FieldError> {
     let mut errs = Vec::new();
-    let name_ok = req
-        .plugin
-        .chars()
-        .next()
-        .is_some_and(|c| c.is_ascii_lowercase())
-        && req.plugin.len() <= 40
-        && req
-            .plugin
-            .chars()
-            .all(|c| c.is_ascii_lowercase() || c.is_ascii_digit() || c == '-')
-        && !req.plugin.ends_with('-')
-        && !req.plugin.contains("--");
-    if !name_ok || !manifest_path(root, &req.plugin).is_file() {
+    if !is_plugin_name(&req.plugin) || !manifest_path(root, &req.plugin).is_file() {
         errs.push(FieldError {
             field: "plugin",
             message: format!("No minted plugin called {}. Mint it first.", req.plugin),
@@ -321,7 +313,7 @@ pub fn validate(req: &ProvisionRequest, root: &Path) -> Vec<FieldError> {
         errs.push(FieldError {
             field: "files",
             message:
-                "Use plain relative paths such as src/prog-block.js, with no .. and no leading /."
+                "Use plain relative paths such as src/prog-block.js, with no .., no leading /, and no quotes, backslashes or parentheses."
                     .into(),
         });
     }
@@ -347,9 +339,10 @@ fn git(args: &[&str]) -> Result<Vec<u8>, String> {
     }
 }
 
-/// Recognizes a license by text fragments after normalizing whitespace.
-/// Returns an SPDX identifier, the generic label `GPL`, or `None` if unrecognized.
-/// Recognition alone does not imply compatibility; see [`COMPATIBLE`].
+/// Recognises a licence from text fragments, ignoring whitespace: returns an
+/// SPDX identifier, the generic label `GPL` for the GPL family (reported as
+/// `AGPL-3.0` for the GNU Affero GPL), or `None` if unrecognised. Recognition
+/// alone does not imply compatibility; see [`COMPATIBLE`].
 pub fn detect_licence(text: &str) -> Option<&'static str> {
     let t: String = text.split_whitespace().collect::<Vec<_>>().join(" ");
     if t.contains("Mozilla Public License Version 2.0")
@@ -464,7 +457,7 @@ fn cache_dir(root: &Path, plugin: &str) -> PathBuf {
 }
 
 /// Fetches into `vendor/.cache/<plugin>.git` under `root` and checks the commit,
-/// license, and requested paths. Returns checks, the subject, and total bytes.
+/// licence, and requested paths. Returns checks, the subject, and total bytes.
 /// A fetch failure or commit mismatch returns one failed check, an empty subject,
 /// and zero bytes. Subject lookup failures yield an empty subject; paths whose
 /// sizes cannot be read are reported as missing. Unparseable sizes contribute zero.
@@ -599,7 +592,7 @@ fn run_checks(root: &Path, req: &ProvisionRequest) -> (Vec<Check>, String, u64) 
 /// Computes what provisioning would do. Fetches into the cache only; the
 /// repository's own files are not changed.
 /// `root` is the lab repository root. The returned plan includes changed
-/// file contents, check results, and a digest for [`apply`]. Fetch, license, and
+/// file contents, check results, and a digest for [`apply`]. Fetch, licence, and
 /// missing-file failures are returned as failed checks in an `Ok` plan.
 ///
 /// # Errors

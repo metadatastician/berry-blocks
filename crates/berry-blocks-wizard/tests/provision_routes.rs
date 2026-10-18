@@ -163,6 +163,29 @@ fn branch_name_is_refused() {
 }
 
 #[test]
+/// A name Mint would refuse is refused with the mint-first reason.
+fn unmintable_plugin_name_is_refused() {
+    let a = app();
+    let r = handle(
+        &a,
+        &req(
+            "POST",
+            "/provision/preview",
+            &format!(
+                "plugin=Wrap&repo=https%3A%2F%2Fexample.org%2Fx&commit={}&files=src%2Fa.js",
+                "a".repeat(40)
+            ),
+        ),
+    );
+    script_free(&r);
+    assert_eq!(r.status, 422);
+    assert!(r.body.contains("Nothing was fetched or changed"));
+    assert!(r
+        .body
+        .contains("No minted plugin called Wrap. Mint it first."));
+}
+
+#[test]
 /// A passing preview offers Provision; only pressing it writes.
 fn preview_then_provision() {
     let a = app();

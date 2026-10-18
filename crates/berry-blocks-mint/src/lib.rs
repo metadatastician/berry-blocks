@@ -144,10 +144,19 @@ fn is_slug(s: &str, max: usize) -> bool {
         && !s.contains("--")
 }
 
+/// True for a name Mint would accept: 1 to 40 ASCII lowercase letters, digits
+/// and single hyphens, starting with a letter, ending with a letter or digit.
+/// Mint creates plugin folders, crates and IDs from this shape, and Provision
+/// requires the same shape for every plugin it pins, so the rule lives here
+/// once and both steps share it.
+pub fn is_plugin_name(name: &str) -> bool {
+    is_slug(name, 40)
+}
+
 /// Checks every field; returns all problems at once, never just the first.
 pub fn validate(req: &MintRequest, root: &Path) -> Vec<FieldError> {
     let mut errs = Vec::new();
-    if !is_slug(&req.name, 40) {
+    if !is_plugin_name(&req.name) {
         errs.push(FieldError {
             field: "name",
             message:
@@ -570,6 +579,28 @@ mod tests {
             fields,
             vec!["name", "display", "claims", "run_key", "licence"]
         );
+    }
+
+    #[test]
+    /// The one plugin-name rule, shared with Provision, holds on both sides.
+    fn plugin_name_rule() {
+        for good in ["progblocks", "z", "zebra-notes-2", "x-0"] {
+            assert!(is_plugin_name(good), "{good} should be a plugin name");
+        }
+        for bad in [
+            "",
+            "Zebra",
+            "1zebra",
+            "zebra--notes",
+            "zebra-",
+            "-zebra",
+            "zebra_notes",
+            "démon",
+        ] {
+            assert!(!is_plugin_name(bad), "{bad} should not be a plugin name");
+        }
+        assert!(is_plugin_name(&"z".repeat(40)));
+        assert!(!is_plugin_name(&"z".repeat(41)));
     }
 
     #[test]
