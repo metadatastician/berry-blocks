@@ -154,6 +154,16 @@ pub fn is_plugin_name(name: &str) -> bool {
 }
 
 /// Checks every field; returns all problems at once, never just the first.
+///
+/// Names must satisfy [`is_plugin_name`]. Under the lab repository `root`, neither
+/// `plugins/<name>` nor `crates/berry-blocks-<name>` may already exist. The `claims`
+/// and `run_key` keys follow the same name rule with a 30-character limit and must
+/// differ. The display name must contain non-whitespace, have at most 60 Unicode
+/// scalar values, and contain no control characters. The license must be one of
+/// [`LICENCES`].
+///
+/// Returns at most one problem per field, or an empty list if all checks pass.
+/// Writes nothing.
 pub fn validate(req: &MintRequest, root: &Path) -> Vec<FieldError> {
     let mut errs = Vec::new();
     if !is_plugin_name(&req.name) {
