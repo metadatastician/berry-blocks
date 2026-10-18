@@ -15,6 +15,12 @@
       ],
     },
   },
+  # A new push to the same ref replaces that ref's run already in flight, so
+  # rapid iteration on a PR does not queue stale runs.
+  concurrency: {
+    group: "CI-${{ github.ref }}",
+    cancel-in-progress: true,
+  },
   # Read-only default; no job needs more.
   permissions: {
     contents: "read",

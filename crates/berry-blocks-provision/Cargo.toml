@@ -9,6 +9,8 @@ license.workspace = true
 repository.workspace = true
 
 [dependencies]
+# The plugin-name rule is defined where plugins are created; Provision shares it.
+berry-blocks-mint = { path = "../berry-blocks-mint" }
 sha2 = "0.10"
 
 [lints]

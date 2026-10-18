@@ -5,7 +5,7 @@ use std::fs;
 use std::path::{Path, PathBuf};
 use std::process::Command;
 
-use berry_blocks_provision::{apply, plan, Pins, ProvisionError, ProvisionRequest};
+use berry_blocks_provision::{apply, plan, validate, Pins, ProvisionError, ProvisionRequest};
 
 /// Runs git in `dir`, panicking on failure; returns trimmed stdout.
 fn git(dir: &Path, args: &[&str]) -> String {
@@ -154,4 +154,71 @@ fn stale_preview_is_refused() {
     assert!(!fs::read_to_string(r.join("pins.kyaml"))
         .unwrap()
         .contains("demo"));
+}
+
+/// Asserts that `name` draws exactly one complaint, on the plugin field.
+fn assert_only_plugin_error(root: &Path, name: &str) {
+    let request = ProvisionRequest {
+        plugin: name.into(),
+        repo: "https://example.org/x".into(),
+        commit: "a".repeat(40),
+        files: vec!["src/a.js".into()],
+    };
+    let errs = validate(&request, root);
+    assert_eq!(errs.len(), 1, "{name}: expected only the plugin error, got {errs:?}");
+    assert_eq!(errs[0].field, "plugin", "{name}: {errs:?}");
+    assert!(errs[0].message.contains("Mint it first"), "{name}: {}", errs[0].message);
+}
+
+#[test]
+/// A name Mint would refuse is refused on the plugin field, whatever the filesystem.
+fn names_mint_would_refuse_are_refused() {
+    let r = root();
+    for bad in [
+        "",
+        "Demo",
+        "1demo",
+        "demo-",
+        "demo--x",
+        "demo_x",
+        "démon",
+        "../demo",
+        "demo/x",
+    ] {
+        assert_only_plugin_error(&r, bad);
+    }
+    assert_only_plugin_error(&r, &"d".repeat(41));
+    // The minted name itself passes every field check.
+    let request = ProvisionRequest {
+        plugin: "demo".into(),
+        repo: "https://example.org/x".into(),
+        commit: "a".repeat(40),
+        files: vec!["src/a.js".into()],
+    };
+    assert!(validate(&request, &r).is_empty());
+}
+
+#[test]
+/// File paths that could break out of the manifest clause are refused.
+fn unsafe_file_paths_are_refused() {
+    let r = root();
+    for bad in [
+        "src/a).js",
+        "src/\"a.js",
+        "src\\a.js",
+        "/src/a.js",
+        "../a.js",
+        "a//b.js",
+        "a/../b.js",
+    ] {
+        let request = ProvisionRequest {
+            plugin: "demo".into(),
+            repo: "https://example.org/x".into(),
+            commit: "a".repeat(40),
+            files: vec![bad.into()],
+        };
+        let errs = validate(&request, &r);
+        assert_eq!(errs.len(), 1, "{bad}: expected only the files error, got {errs:?}");
+        assert_eq!(errs[0].field, "files", "{bad}: {errs:?}");
+    }
 }
