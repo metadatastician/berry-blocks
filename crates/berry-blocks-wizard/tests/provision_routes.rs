@@ -180,7 +180,9 @@ fn unmintable_plugin_name_is_refused() {
     script_free(&r);
     assert_eq!(r.status, 422);
     assert!(r.body.contains("Nothing was fetched or changed"));
-    assert!(r.body.contains("No minted plugin called Wrap. Mint it first."));
+    assert!(r
+        .body
+        .contains("No minted plugin called Wrap. Mint it first."));
 }
 
 #[test]

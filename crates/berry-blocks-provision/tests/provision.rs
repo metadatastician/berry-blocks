@@ -165,9 +165,17 @@ fn assert_only_plugin_error(root: &Path, name: &str) {
         files: vec!["src/a.js".into()],
     };
     let errs = validate(&request, root);
-    assert_eq!(errs.len(), 1, "{name}: expected only the plugin error, got {errs:?}");
+    assert_eq!(
+        errs.len(),
+        1,
+        "{name}: expected only the plugin error, got {errs:?}"
+    );
     assert_eq!(errs[0].field, "plugin", "{name}: {errs:?}");
-    assert!(errs[0].message.contains("Mint it first"), "{name}: {}", errs[0].message);
+    assert!(
+        errs[0].message.contains("Mint it first"),
+        "{name}: {}",
+        errs[0].message
+    );
 }
 
 #[test]
@@ -175,15 +183,7 @@ fn assert_only_plugin_error(root: &Path, name: &str) {
 fn names_mint_would_refuse_are_refused() {
     let r = root();
     for bad in [
-        "",
-        "Demo",
-        "1demo",
-        "demo-",
-        "demo--x",
-        "demo_x",
-        "démon",
-        "../demo",
-        "demo/x",
+        "", "Demo", "1demo", "demo-", "demo--x", "demo_x", "démon", "../demo", "demo/x",
     ] {
         assert_only_plugin_error(&r, bad);
     }
@@ -218,7 +218,11 @@ fn unsafe_file_paths_are_refused() {
             files: vec![bad.into()],
         };
         let errs = validate(&request, &r);
-        assert_eq!(errs.len(), 1, "{bad}: expected only the files error, got {errs:?}");
+        assert_eq!(
+            errs.len(),
+            1,
+            "{bad}: expected only the files error, got {errs:?}"
+        );
         assert_eq!(errs[0].field, "files", "{bad}: {errs:?}");
     }
 }
